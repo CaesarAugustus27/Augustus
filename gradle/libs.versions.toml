@@ -1,6 +1,6 @@
 [versions]
 octavius-postgresql = "2.8.0"
-octavius-i18n = "1.1.0"
+octavius-i18n = "1.2.0"
 dokka = "2.2.0"
 compose-multiplatform = "1.11.0"
 kotlin = "2.4.0"
