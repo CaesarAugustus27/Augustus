@@ -6,7 +6,7 @@
 
 [![Kotlin](https://img.shields.io/badge/Kotlin-2.4-7F52FF?logo=kotlin&logoColor=white)](https://kotlinlang.org)
 [![Compose](https://img.shields.io/badge/Compose-Multiplatform-4285F4?logo=jetpackcompose&logoColor=white)](https://www.jetbrains.com/lp/compose-multiplatform/)
-[![KDoc](https://img.shields.io/badge/KDoc-Documentation-blue)](https://polskianonim.github.io/Augustus/form-engine/)
+[![KDoc](https://img.shields.io/badge/KDoc-Documentation-blue)](https://caesaraugustus27.github.io/Augustus/form-engine/)
 
 </div>
 

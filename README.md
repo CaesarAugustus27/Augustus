@@ -8,7 +8,7 @@
 [![Compose Multiplatform](https://img.shields.io/badge/Compose-Multiplatform-4285F4?logo=jetpackcompose&logoColor=white)](https://www.jetbrains.com/lp/compose-multiplatform/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-18+-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
 [![Octavius for PostgreSQL](https://img.shields.io/maven-central/v/io.github.octavius-framework/driver.svg?label=Octavius%20for%20PostgreSQL&color=orange)](https://github.com/Octavius-Framework/octavius-postgresql)
-[![KDoc](https://img.shields.io/badge/KDoc-Documentation-blue)](https://polskianonim.github.io/Augustus/)
+[![KDoc](https://img.shields.io/badge/KDoc-Documentation-blue)](https://caesaraugustus27.github.io/Augustus/)
 </div>
 
 ---
