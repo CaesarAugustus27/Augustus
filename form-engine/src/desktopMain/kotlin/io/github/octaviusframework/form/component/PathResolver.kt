@@ -76,7 +76,7 @@ object PathResolver {
     /**
      * Resolves [path], which may contain wildcards (*), returning all matching keys from [formState].
      *
-     * Example: "publications/[*]/details/status" -> ["publications[uuid1]/details/status", ...]
+     * Example: "publications[*]/details/status" -> ["publications[uuid1]/details/status", ...]
      */
     fun resolvePaths(path: String, currentContext: ControlContext, formState: FormState): List<String> {
         if (!path.contains("*")) {

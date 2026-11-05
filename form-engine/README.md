@@ -2,7 +2,7 @@
 
 <div align="center">
 
-**A declarative, data-driven form framework for Compose Multiplatform**
+**Forms for Compose Multiplatform, built from a schema of controls**
 
 [![Kotlin](https://img.shields.io/badge/Kotlin-2.4-7F52FF?logo=kotlin&logoColor=white)](https://kotlinlang.org)
 [![Compose](https://img.shields.io/badge/Compose-Multiplatform-4285F4?logo=jetpackcompose&logoColor=white)](https://www.jetbrains.com/lp/compose-multiplatform/)
@@ -14,53 +14,53 @@
 
 ## Overview
 
-Form Engine turns a schema — a map of named controls plus a display order — into a full CRUD form. It renders
-the controls, tracks their state, loads and saves data through a small SQL DSL, runs three levels of validation,
-and lets one control's value drive another's visibility, requirement, or content.
+A form is a map of named controls plus two lists that set their order on screen. The engine renders the controls,
+holds their state, loads initial data through a mapping DSL, runs three stages of validation, and lets one control's
+value change another control's visibility, requirement or content.
 
-A control never talks to the database directly. `FormDataManager` loads initial values with a declarative DSL,
-and every form action receives a `FormResultData` — each control's current *and* initial value — so `save` /
-`delete` / etc. can be written as a couple of `OctaviusClient` calls.
+Saving is ordinary `OctaviusClient` code. Every form action receives a `FormResultData` with the current and initial
+value of each control.
 
-## Features
+## Control types
 
-- **Declarative schema** — controls, content order and action-bar order in one builder class
-- **Rich control types** — primitives, dropdowns, selection groups, dates/intervals, files, sections, repeatable rows
-- **Dependencies** — show/hide or require a control based on another control's value
-- **Cross-control actions** — a control action can read or write any other control by relative (`./`, `../`) or
-  wildcard (`*`) path
-- **Three-level validation** — per-field, business rules and per-action, each with its own error surface
-- **Diffed repeatable rows** — added/modified/deleted rows are separated for you, not just handed back as a flat list
-- **Two-way binding** — `ControlState` is Compose state, so edits recompose automatically
+| Category   | Package                   | Controls                                                                                           |
+|------------|---------------------------|----------------------------------------------------------------------------------------------------|
+| Primitive  | `control.type.primitive`  | `StringControl`, `MultilineStringControl`, `CheckboxControl`, `SwitchControl`, `FilePickerControl` |
+| Number     | `control.type.number`     | `IntegerControl`, `DoubleControl`, `BigDecimalControl`                                             |
+| Date, time | `control.type.datetime`   | `DateTimeControl`, `IntervalControl`                                                               |
+| Selection  | `control.type.selection`  | `EnumControl`, `DatabaseControl`, `RadioGroupControl`, `CheckboxGroupControl`                      |
+| Collection | `control.type.collection` | `StringListControl`                                                                                |
+| Container  | `control.type.container`  | `SectionControl`                                                                                   |
+| Repeatable | `control.type.repeatable` | `RepeatableControl`                                                                                |
+| Button     | `control.type.button`     | `ButtonControl`                                                                                    |
 
-## Control Types
+`DateTimeControl<T>` works through a `DateTimeAdapter<T>`. The functions `DateControl`, `LocalDateTimeControl`,
+`LocalTimeControl` and `InstantControl` create it for the usual types.
 
-| Category | Package | Controls |
-|---|---|---|
-| **Primitive** | `control.type.primitive` | `StringControl`, `MultilineStringControl`, `CheckboxControl`, `SwitchControl`, `FilePickerControl` |
-| **Number** | `control.type.number` | `IntegerControl`, `DoubleControl`, `BigDecimalControl` |
-| **DateTime** | `control.type.datetime` | `DateTimeControl`, `IntervalControl` |
-| **Selection** | `control.type.selection` | `EnumControl`, `DatabaseControl`, `RadioGroupControl`, `CheckboxGroupControl` |
-| **Collection** | `control.type.collection` | `StringListControl` |
-| **Container** | `control.type.container` | `SectionControl` |
-| **Repeatable** | `control.type.repeatable` | `RepeatableControl` |
-| **Action** | `control.type.button` | `ButtonControl` |
+`EnumControl` takes a `KClass<T>` whose `T` implements `EnumWithFormatter`. `DatabaseControl` takes a query and wraps
+it in a subquery to add search, sorting and paging:
 
-`EnumControl` and `DatabaseControl` both build on `AsyncPaginatedDropdownControl` — a search box with paginated
-results. `EnumControl` reads its options from a `KClass<T>` whose `T` implements `EnumWithFormatter`;
-`DatabaseControl` queries `relatedTable` / `displayColumn` directly, caching the selected row's display text.
-`DateTimeControl<T>` is generic over a `DateTimeAdapter<T>`, covering `LocalDate`, `LocalDateTime`, `LocalTime`
-and `Instant` from one implementation.
+```kotlin
+"author_id" to DatabaseControl(
+    label = "Author",
+    query = QueryFragment("SELECT id, name FROM books.authors"),
+    displayColumn = "name"
+)
+```
 
-## Quick Start
+Its value is the `idColumn` of the selected row (`id` by default, always an `Int`). Selecting an item passes the whole
+row to `ActionContext.payload`, so an action can fill other controls from it. `orderBy`, `searchFilter` and `pageSize`
+are optional.
 
-### 1. Define a Schema
+## Quick start
+
+### 1. Define the schema
 
 ```kotlin
 class BookFormSchemaBuilder : FormSchemaBuilder() {
 
     override fun defineControls(): Map<String, Control<*>> = mapOf(
-        "id" to IntegerControl(label = null), // hidden — carries the loaded id through to the save action
+        "id" to IntegerControl(label = null),
         "title" to StringControl(label = "Title", required = true),
         "author" to StringControl(label = "Author"),
         "year" to IntegerControl(label = "Year"),
@@ -76,19 +76,19 @@ class BookFormSchemaBuilder : FormSchemaBuilder() {
         "cancel_button" to ButtonControl(
             text = "Cancel",
             buttonType = ButtonType.Outlined,
-            // Cancel touches no data, so it never reaches the data manager
             actions = listOf(ControlAction { AppRouter.goBack() })
         )
     )
 
-    // "id" is tracked but never rendered — it's simply absent from contentOrder
     override fun defineContentOrder() = listOf("title", "author", "year", "status")
 
     override fun defineActionBarOrder() = listOf("cancel_button", "save_button")
 }
 ```
 
-### 2. Implement Data Manager
+A control missing from both order lists is not rendered but still holds a value, like `id` here.
+
+### 2. Implement the data manager
 
 ```kotlin
 class BookFormDataManager : FormDataManager() {
@@ -96,6 +96,7 @@ class BookFormDataManager : FormDataManager() {
     override fun initData(payload: Map<String, Any?>): Map<String, Any?>? {
         return loadData(payload["id"]) {
             from("books", "b")
+            map("id")
             map("title")
             map("author")
             map("year")
@@ -126,7 +127,6 @@ class BookFormDataManager : FormDataManager() {
         return when (result) {
             is DataResult.Success<*> -> true
             is DataResult.Failure -> {
-                // `false` carries the fact of failure, not its content — surface the error here
                 GlobalDialogManager.show(ErrorDialogConfig(result.error))
                 false
             }
@@ -135,15 +135,16 @@ class BookFormDataManager : FormDataManager() {
 }
 ```
 
-`getCurrent` / `getInitial` (and their typed `getCurrentAs<T>` / `getInitialAs<T>` variants) read
-`ControlResultData` out of `FormResultData` without the `!!.currentValue as T` boilerplate. A path without a
-control, a path through a control that is not a section, or a value that is not a `T` (including `null` for a
-non-null `T`, as for a hidden control) throws `FormResultException` with the path.
+An action reports failure by returning `false` and shows the error itself.
 
-### 3. Create the Screen
+`getCurrent` and `getInitial` read a value by path. `getCurrentAs<T>` and `getInitialAs<T>` also cast it. All four throw
+`FormResultException` with the path when no control lies at the path or the path goes through a control that is not a
+section. The `As` variants also throw when the value is not a `T`, which includes `null` for a non-null `T`, as with a
+hidden control.
 
-`FormView` is a plain composable taking a `FormHandler` — the engine knows nothing about screens, titles or
-navigation. The application wraps it in whatever its own router expects:
+### 3. Create the screen
+
+`FormView(handler)` is a composable. In Augustus it goes into a `ComponentScreen` from the `navigation` module:
 
 ```kotlin
 class BookFormScreen {
@@ -155,7 +156,7 @@ class BookFormScreen {
                 formValidator = BookFormValidator(),
                 payload = mapOf("id" to bookId)
             )
-            return ComponentScreen(title = "Books") { FormView(formHandler) }
+            return ComponentScreen("Books") { FormView(formHandler) }
         }
     }
 }
@@ -163,44 +164,35 @@ class BookFormScreen {
 AppRouter.navigateTo(BookFormScreen.create(bookId))
 ```
 
-`ComponentScreen` and `AppRouter` come from the host application's navigation module, not from this engine.
-Anything that can render a composable works just as well — a dialog, a second window, a tab host.
+`FormHandler` loads the initial data in the background. `FormView` shows a spinner until the data is ready and an error
+message if loading failed (`loadState`). While an action runs, an overlay blocks input (`actionTriggered`).
 
-`FormHandler` loads the initial data asynchronously and owns `FormState`, `ErrorManager` and the wiring between
-controls; `FormView` shows a spinner while `loadState` is `Loading`, a "could not load" message instead of the
-controls once it is `Failed`, and blocks input behind an overlay while an action is running (`actionTriggered`).
+`triggerAction(actionKey, validates)` returns `true` when the action ran and succeeded, and `false` when validation
+failed, the key is unknown or the action failed. It runs in the handler's scope, so a save still finishes if the screen
+closes in the meantime.
 
-`triggerAction` returns `true` when the action ran and reported success. That single boolean is everything the
-engine hands back — what happens next (closing the screen, going somewhere else) is decided by the button's
-lambda, which is application code and already knows the router.
+## Loading data
 
-## Data Loading DSL
-
-The `loadData` function provides a DSL for loading form data:
+`loadData` maps controls to columns and runs one query:
 
 ```kotlin
 override fun initData(payload: Map<String, Any?>): Map<String, Any?>? {
     return loadData(payload["id"]) {
-        // Main table
         from("books", "b")
-        map("title", "title") // control name -> db column (default is control name in snake_case)
-        map("author")
-        map("publication_year", "pub_year")
+        map("title")
+        map("publication_year", "pub_year") // the column has another name than the control
 
-        // One-to-one relation
         mapOneToOne {
             from("book_details", "bd")
             on("bd.book_id = b.id")
             map("isbn")
-            map("page_count") // matches db column 'page_count' automatically
-            existenceFlag("has_details", "bd.id")  // boolean flag if relation exists
+            existenceFlag("has_details", "bd.id") // true when the related row exists
         }
 
-        // One-to-many relation (for RepeatableControl)
         mapRelatedList("authors") {
             from("book_authors", "ba")
-            linkedBy("ba.book_id") // defaults to matching against the main row's "@id"
-            orderBy("ba.position") // optional; without it rows come back in no particular order
+            linkedBy("ba.book_id")
+            orderBy("ba.position")
             map("name")
             map("role")
         }
@@ -208,16 +200,16 @@ override fun initData(payload: Map<String, Any?>): Map<String, Any?>? {
 }
 ```
 
-Everything compiles down to a single query: `mapOneToOne` becomes a `LEFT JOIN`, `mapRelatedList` becomes a
-correlated `ARRAY(SELECT ROW(...))::record[]` subquery — an anonymous record read back as a
-`Map<String, Any?>` per row, keys and values alternating, which is what a repeatable control wants and what
-no declared type covers. `orderBy` lands inside that subquery verbatim, and the array keeps its order, so the
-repeatable shows rows in that order. `id` is assumed as the main table's primary key; override it with `idColumn("uuid")`
-if it's named differently. If `id` (the value passed to `loadData`) is `null`, loading is skipped and an empty
-map is returned — the natural path for a "new record" form.
+- `map` takes a control path and a column. The column defaults to the last path segment in snake_case.
+- `mapOneToOne` becomes a `LEFT JOIN`.
+- `mapRelatedList` becomes an `ARRAY(SELECT ROW(...))::record[]` subquery, read back as a list of maps for a
+  `RepeatableControl`. `linkedBy` compares the column with the `id` given to `loadData`, or with its second argument.
+  Rows come back in `orderBy` order, and in no particular order without it.
+- `id` is the primary key of the main table. `idColumn("uuid")` names another column.
 
-If the query fails, or no row matches the `id`, `loadData` shows a dialog with the reason and returns `null`.
-`initData` passes it on and the form ends in `FormLoadState.Failed`:
+With a `null` id, `loadData` skips the query and returns an empty map, which is what a new record needs. If the query
+fails or no row matches, it shows a dialog and returns `null`. `initData` passes that on, and the form ends in
+`FormLoadState.Failed`:
 
 ```kotlin
 override fun initData(payload: Map<String, Any?>): Map<String, Any?>? {
@@ -228,41 +220,41 @@ override fun initData(payload: Map<String, Any?>): Map<String, Any?>? {
 
 ### Initial data must fit the schema
 
-Every key returned by `initData` has to name a control, and every non-null value has to be one the control
-accepts (`Control.acceptsValue`). Otherwise loading throws `InitDataException` with the schema path of the
-value, e.g. `"basic_info/status"`, or `"publications/status"` for a field of repeatable rows.
+`initData` returns a flat map keyed by control path. Every key must name a control, and every non-null value must be one
+the control accepts (`Control.acceptsValue`). Otherwise loading throws `InitDataException` with the schema path of the
+value, e.g. `"basic_info/status"`, or `"publications/status"` for a field of repeatable rows. The exception ends in the
+error dialog and `FormLoadState.Failed`.
 
-| Control | Accepts | Typical PostgreSQL column |
-|---|---|---|
-| `StringControl`, `MultilineStringControl` | `String` | `text`, `varchar` |
-| `IntegerControl` | `Int` | `integer` (`smallint` reads as `Short`, `bigint` as `Long` — neither fits) |
-| `DoubleControl` | `Double` | `double precision` (`real` reads as `Float`) |
-| `BigDecimalControl` | `BigDecimal` | `numeric` |
-| `CheckboxControl`, `SwitchControl` | `Boolean` | `boolean` |
-| `DateTimeControl<T>` | the adapter's `valueClass` | `date`, `time`, `timestamp`, `timestamptz` |
-| `IntervalControl` | `kotlin.time.Duration` | `interval` (through the application's converter) |
-| `EnumControl<T>` | a constant of `T` | the enum type registered with `@PgEnumType` |
-| `DatabaseControl` | `Int` | the `integer` key of the related row |
-| `RadioGroupControl<T>` | one of its option values | — |
-| `CheckboxGroupControl<T>` | a list of its option values | — |
-| `StringListControl` | `List<String>` | `text[]` |
-| `FilePickerControl<T>` | `String` (`PATH_STRING`) or `ByteArray` (`CONTENT_BYTES`) | `text` / `bytea` |
-| `RepeatableControl` | a list of row maps, as `mapRelatedList` returns them | — |
-| `SectionControl` | nothing under its own name — its fields go under `section/field` paths | — |
-| `ButtonControl` | nothing | — |
+| Control                                   | Accepts                                                               | Typical PostgreSQL column                                                        |
+|-------------------------------------------|-----------------------------------------------------------------------|----------------------------------------------------------------------------------|
+| `StringControl`, `MultilineStringControl` | `String`                                                              | `text`, `varchar`                                                                |
+| `IntegerControl`                          | `Int`                                                                 | `integer` (`smallint` reads as `Short` and `bigint` as `Long`, and neither fits) |
+| `DoubleControl`                           | `Double`                                                              | `double precision` (`real` reads as `Float`)                                     |
+| `BigDecimalControl`                       | `BigDecimal`                                                          | `numeric`                                                                        |
+| `CheckboxControl`, `SwitchControl`        | `Boolean`                                                             | `boolean`                                                                        |
+| `DateTimeControl<T>`                      | the adapter's `valueClass`                                            | `date`, `time`, `timestamp`, `timestamptz`                                       |
+| `IntervalControl`                         | `kotlin.time.Duration`                                                | `interval` (through the application's converter)                                 |
+| `EnumControl<T>`                          | a constant of `T`                                                     | the enum type registered with `@PgEnumType`                                      |
+| `DatabaseControl`                         | `Int`                                                                 | the `integer` key of the related row                                             |
+| `RadioGroupControl<T>`                    | one of its option values                                              |                                                                                  |
+| `CheckboxGroupControl<T>`                 | a list of its option values                                           |                                                                                  |
+| `StringListControl`                       | `List<String>`                                                        | `text[]`                                                                         |
+| `FilePickerControl<T>`                    | `String` (`PATH_STRING`) or `ByteArray` (`CONTENT_BYTES`)             | `text`, `bytea`                                                                  |
+| `RepeatableControl`                       | a list of row maps, as `mapRelatedList` returns them                  |                                                                                  |
+| `SectionControl`                          | nothing under its own name, its fields go under `section/field` paths |                                                                                  |
+| `ButtonControl`                           | nothing                                                               |                                                                                  |
 
-Values are not converted: a `numeric` column under a `DoubleControl` fails.
+Values are not converted, so a `numeric` column under a `DoubleControl` fails.
 
 ## Dependencies
 
-Control visibility and requirements based on other control values:
+A dependency shows a control or makes it required based on another control's value:
 
 ```kotlin
-// Show "publisher" only when status is "Published"
 "publisher" to StringControl(
     label = "Publisher",
     dependencies = mapOf(
-        "visibility" to ControlDependency(
+        "visible" to ControlDependency(
             controlPath = "status",
             value = BookStatus.Published,
             dependencyType = DependencyType.Visible,
@@ -271,7 +263,6 @@ Control visibility and requirements based on other control values:
     )
 )
 
-// Make "isbn" required only when "has_isbn" is checked
 "isbn" to StringControl(
     label = "ISBN",
     dependencies = mapOf(
@@ -285,48 +276,63 @@ Control visibility and requirements based on other control values:
 )
 ```
 
-`comparisonType` also accepts `ComparisonType.OneOf`, matching against a `Collection` passed as `value`, and
-`ComparisonType.NotEquals`. A hidden control's `currentValue` is forced to `null` before it reaches
-`FormResultData`, so conditionally-shown fields never leak stale data into a save. A dependency whose path
-doesn't resolve to a control throws — a typo there would otherwise silently count as met.
+- The engine does not read the map keys, `dependencyType` alone decides what a dependency does. Each dependency
+  still needs its own key, because `mapOf` keeps only the last value under a repeated key.
+- `comparisonType` is `Equals`, `NotEquals` or `OneOf`, which takes a `List` as `value`.
+- A control shows when all its `Visible` dependencies are met, and is required when any `Required` one is.
+- A hidden control has `currentValue = null` in `FormResultData` and skips validation. `getInitial` still returns the
+  loaded value.
+- A dependency path that matches no control throws `IllegalArgumentException`.
 
-## Control Actions and Path Resolution
+## Actions and paths
 
-Every control carries an optional list of `ControlAction<T>`, run on value change — for `ButtonControl` that
-means on click — or, with `executeOnInit = true`, once when the control is first composed (on form load, or when
-a `RepeatableControl` adds a row). The action lambda runs with `ActionContext<T>` as receiver, giving access to
-`sourceValue`, the triggering control's `ControlContext`, and helpers to reach across the form:
+Each control takes a list of `ControlAction<T>`. An action runs when the value changes, or on click for a
+`ButtonControl`. With `executeOnInit = true` it also runs when the control is first composed: on form load, or when a
+row is added to a `RepeatableControl`.
 
 ```kotlin
 "country" to EnumControl(
     label = "Country",
     enumClass = Country::class,
-    actions = listOf(ControlAction { updateControl("../city", null) }) // clear a sibling when country changes
+    actions = listOf(ControlAction { updateControl("./city", null) })
 )
 ```
 
-- `updateControl(path, value)` / `updateControls(path, value)` — write one or many control values by path; a value
-  the control does not accept (`Control.acceptsValue`) throws `IllegalArgumentException` naming both paths, and
-  sections, repeatable lists and buttons accept none
-- `updateLabel(path, label)` — override a control's rendered label
+The lambda runs with `ActionContext<T>` as its receiver:
 
-Paths are resolved relative to the acting control's container: `./name` addresses a sibling, a leading `/`
-starts from the root (`/basic_info/status`), and a bare `name` is treated as absolute.
-Both containers nest state paths: a `SectionControl` appends its name (`basic_info/name`), a `RepeatableControl`
-appends its name and the row (`authors[rowId]/name`), and `../name` steps out one container. `updateControls`
-additionally accepts a `*` wildcard segment (e.g. `"rows/*/total"`) and updates every matching control in
-`FormState`. A path that doesn't resolve to a control throws; only a `*` pattern may match nothing, since a
-list can have no rows.
+| Member                           | Use                                                                       |
+|----------------------------------|---------------------------------------------------------------------------|
+| `sourceValue`                    | new value of the control                                                  |
+| `payload`                        | extra data from the control, e.g. the selected row of a `DatabaseControl` |
+| `trigger`                        | runs a form action with `triggerAction`                                   |
+| `errorManager`                   | sets field and global errors                                              |
+| `coroutineScope`                 | scope for asynchronous work                                               |
+| `readControl<V>(path)`           | reads another control's value                                             |
+| `updateControl(path, value)`     | writes another control's value                                            |
+| `updateControls(pattern, value)` | writes every matching control                                             |
+| `updateLabel(path, label)`       | replaces a control's label                                                |
 
-Actions run in a supervised scope (`rememberSupervisedCoroutineScope()` from `ui-core`), which is also the
-`coroutineScope` in `ActionContext`. An exception thrown by an action, or by a coroutine it launches there, is
-logged and shown in the global error dialog instead of taking the window down. That is a safety net for bugs:
-expected failures should still be reported through `DataResult`, a dialog and `false`.
+A `SectionControl` adds `name/` to the paths of its children and a `RepeatableControl` adds `name[rowId]/`. Paths are
+resolved against that structure:
+
+| Path                    | Points at                                   |
+|-------------------------|---------------------------------------------|
+| `name`, `/section/name` | a control counted from the form root        |
+| `./name`                | a sibling in the same container             |
+| `../name`               | a control one container up                  |
+| `rows[*]/total`         | `total` in every row, `updateControls` only |
+
+A path that matches no control throws `IllegalArgumentException`. Only a pattern with `*` may match nothing, since a list
+can have no rows. A value the control does not accept also throws, under the same `acceptsValue` check as initial data.
+Sections, repeatable lists and buttons accept no value this way.
+
+An exception from an action, or from a coroutine it launches in `coroutineScope`, ends in the global error dialog and the
+window stays open. Report expected failures through `DataResult`, your own dialog and `false`.
 
 ## Sections
 
-A `SectionControl` groups controls in a titled card and owns them, the same way a `RepeatableControl` owns its
-row controls:
+A `SectionControl` groups controls in a titled card. `columns` sets the layout, `collapsible` and `initiallyExpanded` set
+the folding:
 
 ```kotlin
 "play_time_section" to SectionControl(
@@ -336,24 +342,30 @@ row controls:
         "play_time_hours" to DoubleControl(label = "Hours"),
         "completion_count" to IntegerControl(label = "Completions")
     ),
-    dependencies = mapOf("visible" to ControlDependency("/basic_info/status", GameStatus.Played, DependencyType.Visible, ComparisonType.Equals))
+    dependencies = mapOf(
+        "visible" to ControlDependency("/basic_info/status", GameStatus.Played, DependencyType.Visible, ComparisonType.Equals)
+    )
 )
 ```
 
-A section is one data level — a repeatable row without the `[rowId]` — so everything under it is addressed by
-path: `getCurrent("play_time_section/play_time_hours")` in a save action, `setFieldErrors("basic_info/name", ...)`
-in a validator, `map("play_time_section/play_time_hours")` in `loadData` (the column defaults to the last
-segment), and `"/basic_info/status"` in a dependency reaching another section. Initial values come keyed by those
-paths too, which keeps `defaults + loaded + payload` a plain map `+` — a section passed as a nested map
-(`"basic_info" to mapOf(...)`) would be replaced whole by the next map, so it's rejected.
+Fields of a section are addressed by path everywhere:
 
-Hiding a section hides its children too: they skip validation and `getCurrent` returns `null` for them, while
-`getInitial` still returns what was loaded. A section works inside a repeatable row as well, where its fields
-land in that row (`rowData.getCurrent("details/name")`).
+| Where                           | Example                                                    |
+|---------------------------------|------------------------------------------------------------|
+| Reading a result                | `getCurrent("play_time_section/play_time_hours")`          |
+| Field errors                    | `setFieldErrors("play_time_section/play_time_hours", ...)` |
+| `loadData`                      | `map("play_time_section/play_time_hours")`                 |
+| `initData`                      | `"play_time_section/play_time_hours" to 12.5`              |
+| A dependency in another section | `"/play_time_section/play_time_hours"`                     |
 
-## Repeatable Sections
+A map under the section's own name throws `InitDataException`.
 
-Dynamic rows for collections like order items or authors:
+Hiding a section hides its fields. They skip validation and `getCurrent` returns `null` for them, while `getInitial`
+still returns what was loaded.
+
+## Repeatable rows
+
+`RepeatableControl` holds a list of rows, each with its own set of controls:
 
 ```kotlin
 "authors" to RepeatableControl(
@@ -367,23 +379,31 @@ Dynamic rows for collections like order items or authors:
 )
 ```
 
-`uniqueFields` rejects rows whose combination of listed fields duplicates another row. A `RepeatableControl`
-doesn't just hand back a flat list — its `currentValue` is a `RepeatableResultValue` with the rows already sorted
-into `addedRows`, `modifiedRows`, `deletedRows` and `allCurrentRows`, so a `save` action can insert/update/delete
-each bucket directly instead of diffing the list itself.
+`minItems` also adds empty rows until the count is met. `uniqueFields` rejects a row whose combination of the listed
+fields repeats in another row.
+
+The control's current value is a `RepeatableResultValue` with the rows sorted into `addedRows`, `modifiedRows`,
+`deletedRows` and `allCurrentRows`, each a list of `FormResultData`:
+
+```kotlin
+val authors = formData.getCurrentAs<RepeatableResultValue>("authors")
+val removedIds = authors.deletedRows.map { it.getInitialAs<Int>("author_id") }
+val addedIds = authors.addedRows.map { it.getCurrentAs<Int>("author_id") }
+```
+
+A row can also contain a `SectionControl`. Its fields are then addressed by path within the row, as in the form: the
+row's map in `initData` uses `"details/name"`, and a row of the result is read with `row.getCurrent("details/name")`.
 
 ## Validation
 
-Validation runs in three stages, in order, each gating the next:
+Validation runs in three stages, in this order. A failed stage shows a snackbar and the action does not run.
 
-1. **Field validation** — built into each control's `ControlValidator` (requiredness, format, dependency
-   requirements). Failures go to `ErrorManager` as field or format errors and stop the action.
-2. **Business rules** — `FormValidator.validateBusinessRules(FormResultData): Boolean`, overridden per form for
-   checks that span multiple fields.
-3. **Action-specific validation** — `FormValidator.defineActionValidations()`, keyed by the same `actionKey`
-   passed to `triggerAction`. Runs *after* the first two and always runs for that action, regardless of the
-   button's `validates` flag — the natural place for a uniqueness check that only matters on `save`, not on
-   `delete`.
+1. **Fields.** Each control checks `required`, its format and its `validationOptions`, e.g.
+   `StringValidation(maxLength = 100)`. Runs only with `validates = true`.
+2. **Business rules.** `FormValidator.validateBusinessRules(FormResultData)`, for checks that span several fields. Runs
+   only with `validates = true`.
+3. **Action.** `FormValidator.defineActionValidations()`, keyed by the `actionKey` of `triggerAction`. Always runs for
+   that action, so it fits a check that matters on `save` and not on `delete`.
 
 ```kotlin
 class GameCategoryValidator : FormValidator() {
@@ -410,81 +430,58 @@ class GameCategoryValidator : FormValidator() {
                 errorManager.setFieldErrors("name", listOf("Category already exists"))
                 false
             } else true
-            is DataResult.Failure -> false
+            is DataResult.Failure -> {
+                GlobalDialogManager.show(ErrorDialogConfig(count.error))
+                false
+            }
         }
     }
 }
 ```
 
-`FormValidator` is a `KoinComponent` with `db` and `errorManager` available directly, so business-rule
-and action validators can query the database and attach errors to specific fields in one place.
+`FormValidator` provides `db`, `errorManager`, `formState` and `formSchema`. Field and format errors from `ErrorManager`
+appear under the control, and global errors in a card above the form.
 
 ## Localization
 
-The engine owns its strings. `src/commonMain/resources/i18n/{en,pl}.json` are compiled by the
-[Octavius I18n](https://github.com/Octavius-Framework/octavius-i18n) plugin into
-`io.github.octaviusframework.form.localization.FormTr`, generated from this module alone:
+The engine's strings are in `src/commonMain/resources/i18n/{en,pl}.json`, which
+[Octavius I18n](https://github.com/Octavius-Framework/octavius-i18n) compiles into
+`io.github.octaviusframework.form.localization.FormTr`. Strings shared with the rest of the UI come from `Tr` in
+`ui-core`.
 
-```kotlin
-octaviusI18n {
-    generators {
-        create("form") {
-            targetPackage = "io.github.octaviusframework.form.localization"
-            objectName = "FormTr"
-        }
-    }
-}
-```
-
-Everything the engine renders or reports on its own — validation messages, dropdown placeholders, repeatable
-row labels, the error summary — resolves through `FormTr`, never through the host application's translation
-object. Generic strings shared with the rest of the UI (`Tr.Action.add()`, `Tr.Expandable.expand()`,
-`Tr.Search.*`) are not repeated here — they come from `ui-core`'s `Tr`, which the engine depends on anyway.
-The active language is global —
-`OctaviusI18n.currentLanguage` — and shared with every other translation object in the application.
-
-## Architecture
+## Source layout
 
 ```
 form-engine/
 ├── component/
-│   ├── FormSchema.kt          # FormSchema + FormSchemaBuilder (template method)
-│   ├── FormState.kt           # Reactive per-control state, keyed by hierarchical path; FormLoadState
-│   ├── FormHandler.kt         # Orchestrates load → validate → action
-│   ├── InitDataException.kt   # initData that does not fit the schema (unknown key, value the control rejects)
-│   ├── FormResultException.kt # reading FormResultData failed (no control at the path, value of another type)
-│   ├── FormActionTrigger.kt   # triggerAction(actionKey, validates): Boolean — the whole outward contract
-│   ├── FormView.kt            # Composable rendering content + action bar
-│   ├── FormDataManager.kt     # initData() / definedFormActions() contract
-│   ├── FormLoader.kt          # loadData DSL: from/map/mapOneToOne/mapRelatedList
-│   ├── FormValidator.kt       # Field / business-rule / action validation contract
-│   ├── ErrorManager.kt        # Global, field and format error state
-│   └── PathResolver.kt        # Relative ("./", "../") and wildcard ("*") path resolution
+│   ├── FormSchema.kt          # FormSchema, FormSchemaBuilder
+│   ├── FormState.kt           # Per-control state keyed by path, FormLoadState
+│   ├── FormHandler.kt         # Loads data, validates, runs actions
+│   ├── FormActionTrigger.kt   # triggerAction
+│   ├── FormView.kt            # Composable with the content and the action bar
+│   ├── FormDataManager.kt     # initData, definedFormActions
+│   ├── FormLoader.kt          # loadData DSL
+│   ├── FormValidator.kt       # Business-rule and action validation
+│   ├── ErrorManager.kt        # Global, field and format errors
+│   ├── PathResolver.kt        # Relative paths and wildcards
+│   ├── InitDataException.kt   # initData does not fit the schema
+│   └── FormResultException.kt # A value cannot be read from FormResultData
 │
 ├── control/
-│   ├── base/
-│   │   ├── Control.kt         # Base control class: lifecycle, actions, rendering
-│   │   ├── ControlData.kt     # ControlState, ControlContext, FormResultData helpers
-│   │   ├── Dependencies.kt    # ControlDependency, DependencyType, ComparisonType
-│   │   ├── ControlAction.kt   # ControlAction, ActionContext (updateControl/updateLabel)
-│   │   └── ValidationOptions.kt
-│   ├── type/                  # primitive/, number/, datetime/, selection/, collection/,
-│   │                           # container/, repeatable/, button/ — one package per category
-│   ├── validator/              # One ControlValidator implementation per control type
-│   └── layout/                 # Section and repeatable-row rendering, shared layout helpers
+│   ├── base/                  # Control, ControlAction, ControlData, Dependencies, ValidationOptions
+│   ├── type/                  # One package per control category
+│   ├── validator/             # ControlValidator implementations
+│   └── layout/                # Rendering of sections, repeatable rows and labels
 │
-└── resources/i18n/            # en/pl translations, generated into `FormTr`
+└── resources/i18n/            # en and pl translations
 ```
 
-The module targets the desktop JVM only and depends on `ui-core` for theme, dialogs and snackbars, on
-[Octavius for PostgreSQL](https://github.com/Octavius-Framework/octavius-postgresql) for `OctaviusClient`,
-and on [Octavius I18n](https://github.com/Octavius-Framework/octavius-i18n) for its translations.
-`FormValidator` and `FormDataManager` obtain `OctaviusClient` through Koin.
+The module targets the desktop JVM. It depends on `ui-core` for the theme, dialogs and snackbars, on
+[Octavius for PostgreSQL](https://github.com/Octavius-Framework/octavius-postgresql) for `OctaviusClient`, which it gets
+through Koin, and on Octavius I18n for translations.
 
-It does **not** depend on the application's navigation module, and deliberately so: nothing here knows what a
-screen or a router is. `FormView` renders, `triggerAction` reports success, and every decision that follows
-belongs to the caller.
+The tests need no database:
 
-Terminals throw by default there; the engine asks for the result style with `.asResult()`, so a failure the
-database reports arrives as a `DataResult.Failure` and reaches the user through `GlobalDialogManager` rather
-than unwinding the form.
+```bash
+./gradlew :form-engine:desktopTest
+```
