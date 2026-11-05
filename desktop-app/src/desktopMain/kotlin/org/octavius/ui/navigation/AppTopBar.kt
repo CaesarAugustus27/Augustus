@@ -64,7 +64,7 @@ private fun RowScope.TopBarTab(
             .fillMaxHeight()
             .clickable(onClick = onClick)
             .background(backgroundColor)
-            .padding(8.dp),
+            .padding(horizontal = 8.dp, vertical = 4.dp),
         contentAlignment = Alignment.Center
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
