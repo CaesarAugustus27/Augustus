@@ -129,8 +129,18 @@ private fun StatsHeader(state: AsianMediaHomeState) {
             Modifier.weight(1f)
         )
         StatCard(
+            AsianMediaTr.Home.planToRead(),
+            state.planToReadCount.toString(),
+            Modifier.weight(1f)
+        )
+        StatCard(
             AsianMediaTr.Home.completed(),
             state.completedCount.toString(),
+            Modifier.weight(1f)
+        )
+        StatCard(
+            AsianMediaTr.Home.trash(),
+            state.trashCount.toString(),
             Modifier.weight(1f)
         )
     }

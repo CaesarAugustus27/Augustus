@@ -31,14 +31,30 @@ class AsianMediaHomeHandler(
             .where("status = 'READING'")
             .toSql()
 
-        val notExistsForCompleted = db.select("1")
+        val readingPublication = db.select("1")
             .from("asian_media.publications p2")
             .where("p2.title_id = p1.title_id AND p2.status = 'READING'")
             .toSql()
         val completedCountSubquery =
             db.select("COUNT(DISTINCT p1.title_id)")
                 .from("asian_media.publications p1")
-                .where("p1.status = 'COMPLETED' AND NOT EXISTS ($notExistsForCompleted)")
+                .where("p1.status = 'COMPLETED' AND NOT EXISTS ($readingPublication)")
+                .toSql()
+        val planToReadCountSubquery =
+            db.select("COUNT(DISTINCT p1.title_id)")
+                .from("asian_media.publications p1")
+                .where("p1.status = 'PLAN_TO_READ' AND NOT EXISTS ($readingPublication)")
+                .toSql()
+
+        // Śmieć to tytuł, którego wszystkie publikacje są w TRASH.
+        val notTrashPublication = db.select("1")
+            .from("asian_media.publications p2")
+            .where("p2.title_id = p1.title_id AND p2.status <> 'TRASH'")
+            .toSql()
+        val trashCountSubquery =
+            db.select("COUNT(DISTINCT p1.title_id)")
+                .from("asian_media.publications p1")
+                .where("p1.status = 'TRASH' AND NOT EXISTS ($notTrashPublication)")
                 .toSql()
 
         val innerCurrentlyReading = db.select("t.id, t.titles")
@@ -58,9 +74,10 @@ class AsianMediaHomeHandler(
         ).fromSubquery(innerCurrentlyReading)
             .toSql()
 
-        val innerRecentlyAdded = db.select("id, titles")
-            .from("asian_media.titles")
-            .orderBy("created_at DESC")
+        val innerRecentlyAdded = db.select("t.id, t.titles")
+            .from("asian_media.titles t")
+            .where("EXISTS (SELECT 1 FROM asian_media.publications p WHERE p.title_id = t.id AND p.status <> 'TRASH')")
+            .orderBy("t.created_at DESC")
             .limit(5)
             .toSql()
         val recentlyAddedSubquery = db.select(
@@ -80,6 +97,8 @@ class AsianMediaHomeHandler(
         ($totalTitlesSubquery) AS total_titles,
         ($readingCountSubquery) AS reading_count,
         ($completedCountSubquery) AS completed_count,
+        ($planToReadCountSubquery) AS plan_to_read_count,
+        ($trashCountSubquery) AS trash_count,
         ($currentlyReadingSubquery) AS currently_reading,
         ($recentlyAddedSubquery) AS recently_added
     """
@@ -101,6 +120,8 @@ class AsianMediaHomeHandler(
                             totalTitles = data.totalTitles,
                             readingCount = data.readingCount,
                             completedCount = data.completedCount,
+                            planToReadCount = data.planToReadCount,
+                            trashCount = data.trashCount,
                             currentlyReading = data.currentlyReading.orEmpty(),
                             recentlyAdded = data.recentlyAdded.orEmpty(),
                             isLoading = false

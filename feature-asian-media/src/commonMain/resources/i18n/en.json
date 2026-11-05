@@ -40,7 +40,9 @@
     "viewFullList": "View Full List (Report)",
     "totalTitles": "Total Titles",
     "reading": "Reading",
+    "planToRead": "To Read",
     "completed": "Completed",
+    "trash": "Trash",
     "currentlyReading": "Currently Reading",
     "recentlyAdded": "Recently Added",
     "noItems": "No items"
