@@ -5,5 +5,26 @@
     "invalidData": "Received invalid data from script.",
     "moduleNotFound": "Handler module not found: {0}",
     "processingError": "Error occurred during data processing by module."
+  },
+  "asianMedia": {
+    "header": "Augustus Helper",
+    "source": "Source: {0}",
+    "alreadyInDatabase": "Already in the database",
+    "similarTitleInDatabase": "Similar title in the database!",
+    "unknownTitle": "Unknown title",
+    "found": "Found: \"{0}\"",
+    "detectedTitles": "Detected titles:",
+    "noTitles": "No titles found...",
+    "type": "Type",
+    "language": "Language",
+    "identifier": "Identifier",
+    "noIdentifier": "none",
+    "checking": "Checking...",
+    "openInAugustus": "Open in Augustus",
+    "opened": "Opened in the app",
+    "linkTo": "Link to \"{0}\"",
+    "addAsNew": "Add as a new title",
+    "addToAugustus": "Add to Augustus",
+    "noConnection": "Cannot connect to the Augustus server. Make sure the application is running."
   }
 }

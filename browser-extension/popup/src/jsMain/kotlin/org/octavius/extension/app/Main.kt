@@ -11,19 +11,24 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.ComposeViewport
+import io.github.octaviusframework.i18n.core.OctaviusI18n
+import kotlinx.browser.window
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.serialization.json.Json
-import org.octavius.shared.contract.ParseResult
+import org.octavius.extension.asian.AsianMediaExtensionModule
 import org.octavius.extension.localization.PopupTr
 import org.octavius.extension.util.chrome
-import org.octavius.extension.asian.AsianMediaExtensionModule
 import org.octavius.navigation.Screen
+import org.octavius.shared.contract.ParseResult
 import org.octavius.theme.AppTheme
 import kotlin.coroutines.resume
 
 
 @OptIn(ExperimentalComposeUiApi::class)
 fun main() {
+    // Popup mówi językiem przeglądarki; język bez tłumaczeń spada na angielski
+    OctaviusI18n.currentLanguage = window.navigator.language.substringBefore('-')
+
     // Moduły wtyczki
     val extensionModules: List<ExtensionModule> = listOf(
         AsianMediaExtensionModule
