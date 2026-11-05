@@ -37,7 +37,6 @@ kotlin {
                 .filter { it.name.startsWith("feature-") && it.name != "feature-contract" }
                 .forEach { implementation(project(it.path)) }
             implementation(projects.apiServer)
-            implementation(projects.apiContract)
             implementation(compose.desktop.currentOs)
 
             implementation(project.dependencies.platform(libs.koin.bom))

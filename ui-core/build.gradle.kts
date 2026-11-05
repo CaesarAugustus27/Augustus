@@ -25,6 +25,7 @@ kotlin {
 
                 // Inne współdzielone biblioteki
                 api(libs.octavius.i18n.core)
+                api(projects.sharedContract)
                 implementation(libs.kotlinx.coroutines.core)
                 implementation(libs.kotlinx.datetime)
                 implementation(libs.kotlinx.serialization.json)

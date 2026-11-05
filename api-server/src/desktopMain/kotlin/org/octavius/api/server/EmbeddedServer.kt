@@ -9,7 +9,7 @@ import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.plugins.cors.routing.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import org.octavius.api.contract.ApiModule
+import org.octavius.contract.ApiModule
 
 class EmbeddedServer(private val apiModules: List<ApiModule>) {
 

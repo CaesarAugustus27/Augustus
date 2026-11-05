@@ -1,4 +1,4 @@
-package org.octavius.modules.asian.screen
+package org.octavius.extension.asian
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -19,7 +19,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
-import org.octavius.modules.asian.api.ApiClient
 import org.octavius.modules.asian.model.AsianPublicationData
 import org.octavius.modules.asian.model.PublicationAddRequest
 import org.octavius.modules.asian.model.PublicationCheckRequest
@@ -168,22 +167,23 @@ class AsianMediaAddScreen(private val data: AsianPublicationData) : Screen {
             Spacer(modifier = Modifier.height(16.dp))
 
             // Action Buttons
+            val titleId = check?.titleId
             when {
                 check == null -> ActionButton("Sprawdzam...", enabled = false, isLoading = true) {}
 
-                check.byExternalId && check.titleId != null -> ActionButton("Otwórz w Augustusie", !isLoading, isLoading) {
+                check.byExternalId && titleId != null -> ActionButton("Otwórz w Augustusie", !isLoading, isLoading) {
                     runAction {
-                        if (ApiClient.openTitle(TitleOpenRequest(check.titleId))) Pair("Otwarto w aplikacji", true)
+                        if (ApiClient.openTitle(TitleOpenRequest(titleId))) Pair("Otwarto w aplikacji", true)
                         else Pair("Nie można połączyć się z serwerem Augustus.", false)
                     }
                 }
 
-                check.found && check.titleId != null -> {
+                check.found && titleId != null -> {
                     ActionButton("Podepnij do „${check.matchedTitle}”", !isLoading && data.titles.isNotEmpty(), isLoading) {
                         runAction {
                             val response = ApiClient.linkPublication(
                                 PublicationLinkRequest(
-                                    titleId = check.titleId,
+                                    titleId = titleId,
                                     titles = data.titles,
                                     type = data.type,
                                     externalId = data.externalId

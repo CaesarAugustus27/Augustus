@@ -16,7 +16,7 @@ import org.koin.core.Koin
 import org.koin.core.context.GlobalContext.stopKoin
 import org.koin.core.context.startKoin
 import org.koin.dsl.module
-import org.octavius.api.contract.ApiModule
+import org.octavius.contract.ApiModule
 import org.octavius.api.server.EmbeddedServer
 import org.octavius.app.localization.AppTr
 import org.octavius.app.settings.form.database.DatabaseSettingsFormScreen

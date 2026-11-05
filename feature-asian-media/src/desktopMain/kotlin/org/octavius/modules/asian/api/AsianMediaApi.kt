@@ -6,7 +6,7 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import org.octavius.api.contract.ApiModule
+import org.octavius.contract.ApiModule
 import io.github.octaviusframework.client.OctaviusClient
 import io.github.octaviusframework.client.DataResult
 import io.github.octaviusframework.client.dbResult

@@ -3,12 +3,11 @@ package org.octavius.modules.asian.parser
 import kotlinx.browser.document
 import kotlinx.browser.window
 import kotlinx.serialization.json.Json
-import org.octavius.api.contract.ParsedData
-import org.octavius.api.contract.Parser
+import org.octavius.shared.contract.ParsedData
+import org.octavius.shared.contract.Parser
 import org.octavius.domain.asian.PublicationLanguage
 import org.octavius.domain.asian.PublicationType
 import org.octavius.domain.asian.SourceSite
-import org.octavius.modules.asian.AsianMediaExtensionModule
 import org.octavius.modules.asian.model.AsianPublicationData
 import org.octavius.modules.asian.model.ExternalId
 import org.w3c.dom.HTMLDivElement
@@ -21,7 +20,7 @@ import org.w3c.dom.asList
  */
 object MangaUpdatesParser: Parser<AsianPublicationData> {
 
-    override val moduleId: String = AsianMediaExtensionModule.id
+    override val moduleId: String = AsianPublicationData.MODULE_ID
 
     override fun canParse(url: String): Boolean {
         return "mangaupdates.com/series/" in url

@@ -13,11 +13,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.ComposeViewport
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.serialization.json.Json
-import org.octavius.api.contract.ExtensionModule
-import org.octavius.api.contract.ParseResult
+import org.octavius.shared.contract.ParseResult
 import org.octavius.extension.localization.PopupTr
 import org.octavius.extension.util.chrome
-import org.octavius.modules.asian.AsianMediaExtensionModule
+import org.octavius.extension.asian.AsianMediaExtensionModule
 import org.octavius.navigation.Screen
 import org.octavius.theme.AppTheme
 import kotlin.coroutines.resume

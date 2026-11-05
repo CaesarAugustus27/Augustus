@@ -12,10 +12,11 @@ kotlin {
         val jsMain by getting {
             dependencies {
                 implementation(projects.browserExtension.chromeApi)
-                implementation(projects.apiContract)
+                implementation(projects.sharedContract)
                 implementation(projects.featureAsianMedia)
                 implementation(projects.featureGames)
                 implementation(libs.kotlinx.serialization.json)
+                implementation(libs.kotlinx.coroutines.core)
             }
         }
     }

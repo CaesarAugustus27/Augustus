@@ -1,4 +1,4 @@
-package org.octavius.api.contract
+package org.octavius.shared.contract
 
 import kotlinx.serialization.Serializable
 

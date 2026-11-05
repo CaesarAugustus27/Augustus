@@ -42,7 +42,7 @@ include(
     ":api-server",
     ":ui-core",
     ":navigation",
-    ":api-contract",
+    ":shared-contract",
     ":feature-contract",
     // Browser extension
     ":browser-extension",

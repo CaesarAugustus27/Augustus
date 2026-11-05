@@ -22,7 +22,7 @@ dokka {
 // Zależności Dokka - agregacja dokumentacji ze wszystkich modułów
 dependencies {
     dokka(projects.apiServer)
-    dokka(projects.apiContract)
+    dokka(projects.sharedContract)
     dokka(projects.uiCore)
     dokka(projects.desktopApp)
     dokka(projects.formEngine)

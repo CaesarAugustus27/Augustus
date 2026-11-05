@@ -5,9 +5,9 @@ import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
-import org.octavius.api.contract.ParseResult
-import org.octavius.api.contract.ParsedData
-import org.octavius.api.contract.Parser
+import org.octavius.shared.contract.ParseResult
+import org.octavius.shared.contract.ParsedData
+import org.octavius.shared.contract.Parser
 import org.octavius.extension.util.chrome
 import org.octavius.modules.asian.parser.MangaUpdatesParser
 import org.octavius.modules.asian.parser.NovelUpdatesParser

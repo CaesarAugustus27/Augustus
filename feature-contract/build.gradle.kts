@@ -13,7 +13,7 @@ kotlin {
 
         commonMain.dependencies {
             implementation(projects.navigation)
-            implementation(projects.apiContract)
+            api(libs.ktor.server.core)
         }
     }
 }
