@@ -5,5 +5,26 @@
     "invalidData": "Otrzymano nieprawidłowe dane ze skryptu.",
     "moduleNotFound": "Nie znaleziono modułu obsługującego: {0}",
     "processingError": "Wystąpił błąd podczas przetwarzania danych przez moduł."
+  },
+  "asianMedia": {
+    "header": "Augustus Helper",
+    "source": "Źródło: {0}",
+    "alreadyInDatabase": "Już w bazie",
+    "similarTitleInDatabase": "Podobny tytuł w bazie!",
+    "unknownTitle": "Nieznany tytuł",
+    "found": "Znaleziono: \"{0}\"",
+    "detectedTitles": "Wykryte tytuły:",
+    "noTitles": "Nie znaleziono tytułów...",
+    "type": "Typ",
+    "language": "Język",
+    "identifier": "Identyfikator",
+    "noIdentifier": "brak",
+    "checking": "Sprawdzam...",
+    "openInAugustus": "Otwórz w Augustusie",
+    "opened": "Otwarto w aplikacji",
+    "linkTo": "Podepnij do „{0}”",
+    "addAsNew": "Dodaj jako nowy tytuł",
+    "addToAugustus": "Dodaj do Augustusa",
+    "noConnection": "Nie można połączyć się z serwerem Augustus. Upewnij się, że aplikacja jest uruchomiona."
   }
 }

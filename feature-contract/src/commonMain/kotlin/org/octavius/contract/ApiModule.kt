@@ -1,4 +1,4 @@
-package org.octavius.api.contract
+package org.octavius.contract
 
 import io.ktor.server.routing.*
 

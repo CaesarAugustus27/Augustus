@@ -1,6 +1,6 @@
 package org.octavius.modules.games
 
-import org.octavius.api.contract.ApiModule
+import org.octavius.contract.ApiModule
 import org.octavius.contract.FeatureModule
 import org.octavius.contract.ScreenFactory
 import org.octavius.modules.games.api.GamesApi

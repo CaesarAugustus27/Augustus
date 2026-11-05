@@ -1,6 +1,6 @@
 package org.octavius.modules.asian
 
-import org.octavius.api.contract.ApiModule
+import org.octavius.contract.ApiModule
 import org.octavius.contract.FeatureModule
 import org.octavius.contract.ScreenFactory
 import org.octavius.modules.asian.api.AsianMediaApi

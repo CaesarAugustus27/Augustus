@@ -1,4 +1,4 @@
-package org.octavius.modules.asian.api
+package org.octavius.extension.asian
 
 import io.ktor.client.*
 import io.ktor.client.call.*
@@ -7,6 +7,7 @@ import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import kotlinx.serialization.json.Json
+import org.octavius.extension.localization.PopupTr
 import org.octavius.modules.asian.model.PublicationAddRequest
 import org.octavius.modules.asian.model.PublicationAddResponse
 import org.octavius.modules.asian.model.PublicationCheckRequest
@@ -18,7 +19,6 @@ import org.octavius.modules.asian.model.TitleOpenRequest
 object ApiClient {
 
     private const val BASE_URL = "http://localhost:8080"
-    private const val NO_CONNECTION = "Nie można połączyć się z serwerem Augustus. Upewnij się, że aplikacja jest uruchomiona."
 
     private val client = HttpClient {
         install(ContentNegotiation) {
@@ -37,7 +37,7 @@ object ApiClient {
             }.body()
         } catch (e: Exception) {
             println("Błąd API: ${e.message}")
-            PublicationAddResponse(success = false, message = NO_CONNECTION)
+            PublicationAddResponse(success = false, message = PopupTr.AsianMedia.noConnection())
         }
     }
 
@@ -61,7 +61,7 @@ object ApiClient {
             }.body()
         } catch (e: Exception) {
             println("Błąd API (/link): ${e.message}")
-            PublicationLinkResponse(success = false, message = NO_CONNECTION)
+            PublicationLinkResponse(success = false, message = PopupTr.AsianMedia.noConnection())
         }
     }
 

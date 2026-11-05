@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.plugin.KotlinPlatformType
+
 plugins {
     alias(libs.plugins.octaviusI18n)
     alias(libs.plugins.kotlinMultiplatform)
@@ -8,30 +10,31 @@ plugins {
 
 kotlin {
     jvm("desktop")
-    // Dla wtyczki: DTO API we wspólnym kodzie, odczyt stron SteamDB w jsMain
+    // Dla wtyczki: DTO API i enumy we wspólnym kodzie, odczyt stron SteamDB w jsMain. Korzysta z nich
+    // content script, więc Compose jest wyłącznie w desktopMain.
     js {
         browser()
     }
 
     sourceSets {
         val desktopMain by getting
-        val jsMain by getting
 
         commonMain.dependencies {
-            implementation(projects.uiCore)
-            implementation(projects.navigation)
-            implementation(composeLibs.components.resources)
+            implementation(projects.sharedContract)
+            implementation(libs.octavius.i18n.core)
             implementation(libs.kotlinx.serialization.json)
-            implementation(libs.kotlinx.coroutines.core)
-
             implementation(libs.octavius.pg.model)
         }
 
         desktopMain.dependencies {
+            implementation(projects.uiCore)
+            implementation(projects.navigation)
+            implementation(composeLibs.components.resources)
+            implementation(libs.kotlinx.coroutines.core)
+
             implementation(projects.formEngine)
             implementation(projects.reportEngine)
             implementation(projects.featureContract)
-            implementation(projects.apiContract)
 
             implementation(project.dependencies.platform(libs.koin.bom))
 
@@ -41,6 +44,11 @@ kotlin {
             implementation(libs.ktor.server.core)
         }
     }
+}
+
+// Compose jest tylko w desktopMain, a kompilator nie przyjmuje targetu bez Compose Runtime
+composeCompiler {
+    targetKotlinPlatforms.set(setOf(KotlinPlatformType.jvm))
 }
 
 octaviusI18n {

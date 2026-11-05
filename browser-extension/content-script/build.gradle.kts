@@ -1,6 +1,6 @@
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
-    alias(libs.plugins.kotlinSerialization) // Potrzebne do DTO
+    alias(libs.plugins.kotlinSerialization)
 }
 
 kotlin {
@@ -12,12 +12,11 @@ kotlin {
         val jsMain by getting {
             dependencies {
                 implementation(projects.browserExtension.chromeApi)
-                implementation(projects.apiContract)
+                implementation(projects.sharedContract)
                 implementation(projects.featureAsianMedia)
                 implementation(projects.featureGames)
-                // Ale potrzebuje wrapperów do komunikacji
-                implementation(browserLibs.kotlin.browser)
                 implementation(libs.kotlinx.serialization.json)
+                implementation(libs.kotlinx.coroutines.core)
             }
         }
     }

@@ -1,4 +1,4 @@
-package org.octavius.api.contract
+package org.octavius.extension.app
 
 import org.octavius.navigation.Screen
 

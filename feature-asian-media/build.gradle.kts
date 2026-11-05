@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.plugin.KotlinPlatformType
+
 plugins {
     alias(libs.plugins.octaviusI18n)
     alias(libs.plugins.kotlinMultiplatform)
@@ -7,28 +9,29 @@ plugins {
 }
 
 kotlin {
-    // Definiujemy, że ten moduł jest tylko dla desktopa
     jvm("desktop")
+    // Dla wtyczki: DTO API i enumy we wspólnym kodzie, parsery stron w jsMain. Korzysta z nich content
+    // script, więc Compose jest wyłącznie w desktopMain.
     js {
         browser()
     }
 
     sourceSets {
         val desktopMain by getting
-        val jsMain by getting
 
         commonMain.dependencies {
-            implementation(projects.uiCore)
-            implementation(projects.navigation)
-            implementation(composeLibs.components.resources)
+            implementation(projects.sharedContract)
+            implementation(libs.octavius.i18n.core)
             implementation(libs.kotlinx.serialization.json)
-            implementation(libs.kotlinx.coroutines.core)
-
-            implementation(projects.apiContract)
             implementation(libs.octavius.pg.model)
         }
 
         desktopMain.dependencies {
+            implementation(projects.uiCore)
+            implementation(projects.navigation)
+            implementation(composeLibs.components.resources)
+            implementation(libs.kotlinx.coroutines.core)
+
             implementation(projects.formEngine)
             implementation(projects.reportEngine)
             implementation(projects.featureContract)
@@ -39,14 +42,12 @@ kotlin {
 
             implementation(libs.ktor.server.core)
         }
-
-        jsMain.dependencies {
-            implementation(libs.ktor.client.core)
-            implementation(libs.ktor.client.js) // Implementacja dla środowiska JS
-            implementation(libs.ktor.client.content.negotiation)
-            implementation(libs.ktor.serialization.kotlinx.json)
-        }
     }
+}
+
+// Compose jest tylko w desktopMain, a kompilator nie przyjmuje targetu bez Compose Runtime
+composeCompiler {
+    targetKotlinPlatforms.set(setOf(KotlinPlatformType.jvm))
 }
 
 octaviusI18n {

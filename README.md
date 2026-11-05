@@ -71,7 +71,7 @@ Augustus/
 ├── feature-contract/        # Shared feature interfaces and models
 │
 ├── api-server/              # REST API for browser extension
-├── api-contract/            # Shared API models between server and extension
+├── shared-contract/         # Contracts shared between the app and the extension
 └── browser-extension/       # Kotlin/JS Chrome extension
 ```
 

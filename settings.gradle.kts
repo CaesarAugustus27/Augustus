@@ -18,9 +18,6 @@ pluginManagement {
 
 dependencyResolutionManagement {
     versionCatalogs {
-        create("browserLibs") {
-            from(files("browser-extension/gradle/libs.versions.toml"))
-        }
         create("composeLibs") {
             from(files("ui-core/gradle/libs.versions.toml"))
         }
@@ -45,7 +42,7 @@ include(
     ":api-server",
     ":ui-core",
     ":navigation",
-    ":api-contract",
+    ":shared-contract",
     ":feature-contract",
     // Browser extension
     ":browser-extension",

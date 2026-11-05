@@ -1,4 +1,4 @@
-package org.octavius.modules.asian.screen
+package org.octavius.extension.asian
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -19,7 +19,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
-import org.octavius.modules.asian.api.ApiClient
+import org.octavius.extension.localization.PopupTr
 import org.octavius.modules.asian.model.AsianPublicationData
 import org.octavius.modules.asian.model.PublicationAddRequest
 import org.octavius.modules.asian.model.PublicationCheckRequest
@@ -88,7 +88,7 @@ class AsianMediaAddScreen(private val data: AsianPublicationData) : Screen {
         ) {
             // Header
             Text(
-                "Augustus Helper",
+                PopupTr.AsianMedia.header(),
                 style = MaterialTheme.typography.headlineSmall.copy(
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary
@@ -96,7 +96,7 @@ class AsianMediaAddScreen(private val data: AsianPublicationData) : Screen {
             )
 
             Text(
-                "Źródło: ${data.source}",
+                PopupTr.AsianMedia.source(data.source),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(bottom = 16.dp)
@@ -108,8 +108,8 @@ class AsianMediaAddScreen(private val data: AsianPublicationData) : Screen {
                 if (check.byExternalId) {
                     StatusCard(
                         icon = Icons.Default.CheckCircle,
-                        heading = "Już w bazie",
-                        title = check.matchedTitle ?: "Nieznany tytuł",
+                        heading = PopupTr.AsianMedia.alreadyInDatabase(),
+                        title = check.matchedTitle ?: PopupTr.AsianMedia.unknownTitle(),
                         publications = check.publications,
                         container = MaterialTheme.colorScheme.primaryContainer,
                         content = MaterialTheme.colorScheme.onPrimaryContainer
@@ -117,8 +117,8 @@ class AsianMediaAddScreen(private val data: AsianPublicationData) : Screen {
                 } else {
                     StatusCard(
                         icon = Icons.Default.Warning,
-                        heading = "Podobny tytuł w bazie!",
-                        title = check.matchedTitle ?: "Nieznany tytuł",
+                        heading = PopupTr.AsianMedia.similarTitleInDatabase(),
+                        title = check.matchedTitle ?: PopupTr.AsianMedia.unknownTitle(),
                         publications = check.publications,
                         container = MaterialTheme.colorScheme.tertiaryContainer,
                         content = MaterialTheme.colorScheme.onTertiaryContainer
@@ -140,13 +140,13 @@ class AsianMediaAddScreen(private val data: AsianPublicationData) : Screen {
                         .verticalScroll(rememberScrollState())
                 ) {
                     Text(
-                        "Wykryte tytuły:",
+                        PopupTr.AsianMedia.detectedTitles(),
                         style = MaterialTheme.typography.titleSmall,
                         color = MaterialTheme.colorScheme.secondary
                     )
 
                     if (data.titles.isEmpty()) {
-                        Text("Nie znaleziono tytułów...", style = MaterialTheme.typography.bodyMedium)
+                        Text(PopupTr.AsianMedia.noTitles(), style = MaterialTheme.typography.bodyMedium)
                     } else {
                         data.titles.forEach { title ->
                             Text(
@@ -159,31 +159,32 @@ class AsianMediaAddScreen(private val data: AsianPublicationData) : Screen {
 
                     HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp), thickness = 0.5.dp)
 
-                    InfoRow("Typ", data.type.toDisplayString())
-                    InfoRow("Język", data.language.toDisplayString())
-                    InfoRow("Identyfikator", data.externalId?.id ?: "brak")
+                    InfoRow(PopupTr.AsianMedia.type(), data.type.toDisplayString())
+                    InfoRow(PopupTr.AsianMedia.language(), data.language.toDisplayString())
+                    InfoRow(PopupTr.AsianMedia.identifier(), data.externalId?.id ?: PopupTr.AsianMedia.noIdentifier())
                 }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
             // Action Buttons
+            val titleId = check?.titleId
             when {
-                check == null -> ActionButton("Sprawdzam...", enabled = false, isLoading = true) {}
+                check == null -> ActionButton(PopupTr.AsianMedia.checking(), enabled = false, isLoading = true) {}
 
-                check.byExternalId && check.titleId != null -> ActionButton("Otwórz w Augustusie", !isLoading, isLoading) {
+                check.byExternalId && titleId != null -> ActionButton(PopupTr.AsianMedia.openInAugustus(), !isLoading, isLoading) {
                     runAction {
-                        if (ApiClient.openTitle(TitleOpenRequest(check.titleId))) Pair("Otwarto w aplikacji", true)
-                        else Pair("Nie można połączyć się z serwerem Augustus.", false)
+                        if (ApiClient.openTitle(TitleOpenRequest(titleId))) Pair(PopupTr.AsianMedia.opened(), true)
+                        else Pair(PopupTr.AsianMedia.noConnection(), false)
                     }
                 }
 
-                check.found && check.titleId != null -> {
-                    ActionButton("Podepnij do „${check.matchedTitle}”", !isLoading && data.titles.isNotEmpty(), isLoading) {
+                check.found && titleId != null -> {
+                    ActionButton(PopupTr.AsianMedia.linkTo(check.matchedTitle ?: PopupTr.AsianMedia.unknownTitle()), !isLoading && data.titles.isNotEmpty(), isLoading) {
                         runAction {
                             val response = ApiClient.linkPublication(
                                 PublicationLinkRequest(
-                                    titleId = check.titleId,
+                                    titleId = titleId,
                                     titles = data.titles,
                                     type = data.type,
                                     externalId = data.externalId
@@ -199,11 +200,11 @@ class AsianMediaAddScreen(private val data: AsianPublicationData) : Screen {
                         modifier = Modifier.fillMaxWidth().height(40.dp),
                         shape = RoundedCornerShape(8.dp)
                     ) {
-                        Text("Dodaj jako nowy tytuł")
+                        Text(PopupTr.AsianMedia.addAsNew())
                     }
                 }
 
-                else -> ActionButton("Dodaj do Augustusa", !isLoading && data.titles.isNotEmpty(), isLoading) {
+                else -> ActionButton(PopupTr.AsianMedia.addToAugustus(), !isLoading && data.titles.isNotEmpty(), isLoading) {
                     runAction(addAsNew)
                 }
             }
@@ -274,7 +275,7 @@ class AsianMediaAddScreen(private val data: AsianPublicationData) : Screen {
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    "Znaleziono: \"$title\"",
+                    PopupTr.AsianMedia.found(title),
                     style = MaterialTheme.typography.bodySmall,
                     color = content
                 )

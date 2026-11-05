@@ -1,6 +1,6 @@
 package org.octavius.app.settings
 
-import org.octavius.api.contract.ApiModule
+import org.octavius.contract.ApiModule
 import org.octavius.app.settings.navigation.SettingsTab
 import org.octavius.contract.FeatureModule
 import org.octavius.contract.ScreenFactory

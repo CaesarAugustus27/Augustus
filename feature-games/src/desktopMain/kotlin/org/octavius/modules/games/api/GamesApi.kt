@@ -7,7 +7,7 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import org.octavius.api.contract.ApiModule
+import org.octavius.contract.ApiModule
 import org.octavius.domain.game.GameStatus
 import org.octavius.modules.games.model.SteamIgnore
 import org.octavius.modules.games.model.SteamIgnoreResponse
