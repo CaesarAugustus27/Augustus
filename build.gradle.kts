@@ -32,6 +32,7 @@ dependencies {
     dokka(projects.featureContract)
     dokka(projects.browserExtension.popup)
     dokka(projects.browserExtension.contentScript)
+    dokka(projects.browserExtension.background)
     dokka(projects.browserExtension.chromeApi)
 }
 

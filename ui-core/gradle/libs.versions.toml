@@ -8,7 +8,6 @@ runtime = { group = "org.jetbrains.compose.runtime", name = "runtime", version.r
 foundation = { group = "org.jetbrains.compose.foundation", name = "foundation", version.ref = "compose" }
 material3 = { group = "org.jetbrains.compose.material3", name = "material3", version.ref = "mateerial3" }
 ui = { module = "org.jetbrains.compose.ui:ui", version.ref = "compose" }
-html-core = { group = "org.jetbrains.compose.html", name = "html-core", version.ref = "compose" }
 # Utils & Resources
 components-resources = { group = "org.jetbrains.compose.components", name = "components-resources", version.ref = "compose" }
 

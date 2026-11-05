@@ -22,12 +22,7 @@ kotlin {
                 implementation(composeLibs.foundation)
                 implementation(composeLibs.ui)
                 implementation(composeLibs.material3)
-                implementation(composeLibs.html.core)
-                implementation(libs.ktor.client.core)
-                implementation(libs.ktor.client.js) // Implementacja dla środowiska JS
-                implementation(libs.ktor.client.content.negotiation)
-                implementation(libs.ktor.serialization.kotlinx.json)
-                implementation(browserLibs.kotlin.browser)
+                implementation(libs.kotlinx.serialization.json)
 
                 implementation(projects.featureAsianMedia)
             }

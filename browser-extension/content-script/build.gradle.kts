@@ -1,6 +1,6 @@
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
-    alias(libs.plugins.kotlinSerialization) // Potrzebne do DTO
+    alias(libs.plugins.kotlinSerialization)
 }
 
 kotlin {
@@ -15,8 +15,6 @@ kotlin {
                 implementation(projects.apiContract)
                 implementation(projects.featureAsianMedia)
                 implementation(projects.featureGames)
-                // Ale potrzebuje wrapperów do komunikacji
-                implementation(browserLibs.kotlin.browser)
                 implementation(libs.kotlinx.serialization.json)
             }
         }
