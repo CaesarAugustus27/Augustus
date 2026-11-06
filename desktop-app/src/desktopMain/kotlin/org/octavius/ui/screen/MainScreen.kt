@@ -24,27 +24,14 @@ import org.octavius.ui.navigation.TabContent
 import org.octavius.ui.snackbar.SnackbarManager
 
 /**
- * Główny ekran aplikacji - punkt wejścia UI zawierający nawigację między zakładkami.
- *
- * Singleton odpowiedzialny za:
- * - Obsługę nawigacji między zakładkami z animowanymi przejściami
- * - Zarządzanie stosami nawigacji dla każdej zakładki
- * - Inicjalizację menedżera snackbarów i dialogów
- * - Renderowanie głównego układu z paskiem górnym i zakładkami
- *
+ * Układ głównego okna: górny pasek z tytułem bieżącego ekranu, pasek zakładek i stos aktywnej zakładki.
+ * Pokazuje też dialogi z `GlobalDialogManager` i snackbary z `SnackbarManager`.
  */
 object MainScreen {
 
     /**
-     * Główny komponent Compose renderujący interfejs aplikacji.
-     *
-     * Konfiguruje kompletny układ aplikacji:
-     * - Scaffold z paskiem górnym i obsługą snackbarów
-     * - Pasek zakładek umożliwiający przełączanie między sekcjami
-     * - Animowane przejścia między zakładkami z efektem przesuwania
-     * - Menedżer globalnych dialogów
-     *
-     * @param tabs Lista dostępnych zakładek do wyświetlenia
+     * Rysuje układ według `AppRouter.state`; przed `AppRouter.initialize` nie rysuje nic. Na pasek trafiają
+     * tylko zakładki z [Tab.isVisibleInNavBar].
      */
     @Composable
     fun Content(tabs: List<Tab>) {

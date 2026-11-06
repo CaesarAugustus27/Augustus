@@ -8,12 +8,7 @@ import androidx.compose.ui.Modifier
 import org.octavius.navigation.Screen
 
 /**
- * Komponent wyświetlający zawartość bieżącego ekranu ze stosu nawigacji.
- *
- * Zarządza renderowaniem aktualnego ekranu z animowanymi przejściami między ekranami.
- * Automatycznie wybiera ostatni ekran ze stosu jako aktywny do wyświetlenia.
- *
- * @param screenStack Aktualny stos ekranów, gdzie ostatni element jest aktywny
+ * Rysuje ekran ze szczytu [screenStack] (ostatni element) i animuje przejście, gdy szczyt się zmienia.
  */
 @Composable
 fun TabContent(screenStack: List<Screen>) {

@@ -4,63 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.painter.Painter
 
 /**
- * Interfejsy i klasy pomocnicze dla globalnego systemu nawigacji opartego na AppRouter.
- *
- * ## Architektura nawigacji
- * 
- * Aplikacja używa centralnego systemu nawigacji z singletonem `AppRouter`, który zarządza:
- * - **Zakładkami aplikacji** - główne sekcje (Asian Media, Games, Settings)  
- * - **Stosami nawigacji** - dla każdej zakładki osobny stos ekranów
- * - **Globalnym stanem** - Single Source of Truth dla całej nawigacji
- *
- * ## Główne komponenty
- * 
- * - **Screen** - pojedynczy ekran w stosie nawigacji zakładki
- * - **Tab** - zakładka aplikacji z własnym stosem ekranów
- * - **TabOptions** - opcje konfiguracyjne zakładek (tytuł, ikona)
- * - **AppRouter** - centralny singleton zarządzający stanem nawigacji
- * - **AppNavigationState** - stan całej nawigacji aplikacji
- * 
- * ## Przykład użycia
- * 
- * ```kotlin
- * // Przełączanie między zakładkami
- * AppRouter.switchToTab(1u)
- * 
- * // Nawigacja do nowego ekranu na aktywnej zakładce
- * AppRouter.navigateTo(MyScreen())
- * 
- * // Powrót do poprzedniego ekranu
- * AppRouter.goBack()
- * ```
- */
-
-/**
- * Interfejs reprezentujący pojedynczy ekran w stosie nawigacji zakładki.
- *
- * Każdy ekran w systemie nawigacji `AppRouter` musi implementować ten interfejs.
- * Ekrany są organizowane w stosy - każda zakładka ma własny stos ekranów.
- *
- * ## Właściwości
- * 
- * - **title** - wyświetlany w górnym pasku nawigacji
- * - **Content()** - metoda renderująca UI ekranu
- *
- * ## Przykład implementacji
- *
- * ```kotlin
- * class MyScreen : Screen {
- *     override val title = "Edycja danych"
- *
- *     @Composable
- *     override fun Content() {
- *         MyComponent()
- *     }
- * }
- *
- * // Nawigacja do ekranu
- * AppRouter.navigateTo(MyScreen())
- * ```
+ * Ekran na stosie zakładki.
  *
  * Dla ekranów budowanych z gotowych komponentów (formularz, raport) nie trzeba pisać własnej
  * klasy - wystarczy [ComponentScreen]:
@@ -74,84 +18,51 @@ interface Screen {
     val title: String
 
     /**
-     * Metoda renderująca interfejs ekranu.
-     *
-     * Wywoływana przez `ScreenContent` gdy ekran jest aktywny na szczycie stosu.
+     * Rysuje ekran, dopóki leży na szczycie stosu aktywnej zakładki. Po zejściu ze szczytu albo przełączeniu
+     * zakładki ekran wypada z kompozycji i jego `remember` przepada, więc stan, który ma przetrwać powrót,
+     * trzyma się poza [Content].
      */
     @Composable
     fun Content()
 }
 
 /**
- * Opcje konfiguracyjne dla zakładki w systemie nawigacji AppRouter.
- *
- * @param title Tytuł zakładki wyświetlany w `AppTabBar`
- * @param icon Opcjonalna ikona zakładki wyświetlana nad tytułem
+ * Tytuł i opcjonalna ikona, którymi zakładka pokazuje się na pasku zakładek. Ikona stoi nad tytułem.
  */
 data class TabOptions(
     val title: String, val icon: Painter? = null
 )
 
 /**
- * Interfejs reprezentujący zakładkę w globalnym systemie nawigacji.
- *
- * Każda zakładka aplikacji (Asian Media, Games, Settings) implementuje ten interfejs.
- * Zakładki są zarządzane przez `AppRouter` i każda ma własny stos ekranów.
- *
- * ## Wymagane właściwości
- * 
- * - **options** - tytuł i opcjonalna ikona (mogą być dynamiczne)
- * - **index** - unikalny identyfikator zakładki (0, 1, 2...)
- * - **getInitialScreen()** - pierwszy ekran wyświetlany po otwarciu zakładki
- *
- * ## Przykład implementacji
- * 
- * ```kotlin
- * class MyTab : Tab {
- *     override val options @Composable get() = TabOptions(
- *         title = "Moja sekcja",
- *         icon = painterResource("icons/my_icon.xml")
- *     )
- *     override val index: UShort = 2u
- *
- *     override fun getInitialScreen() = MyReportScreen()
- * }
- * ```
+ * Zakładka na pasku aplikacji. Feature oddaje ją z `FeatureModule.getTab()`, a `AppRouter` trzyma dla niej
+ * osobny stos ekranów, który zostaje nietknięty przy przełączaniu zakładek.
  */
 interface Tab {
 
     /**
-     * Unikalny, stabilny identyfikator tekstowy zakładki.
-     * Używany do identyfikacji w całym systemie, w tym przez zewnętrzne
-     * zdarzenia nawigacyjne (np. z API).
-     * Przykład: "games", "settings".
+     * Stały, unikalny identyfikator, np. `"books"`. Po nim zakładkę wybierają `AppRouter.switchToTab` i
+     * `AppRouter.navigateTo` z `tabId`, a przez nie zdarzenia nawigacji przychodzące z API.
      */
     val id: String
 
-    /** 
-     * Opcje konfiguracyjne zakładki.
-     * 
-     * Może być dynamiczne i używać Composable state do reaktywności.
+    /**
+     * Tytuł i ikona na pasku zakładek. Getter jest `@Composable`, żeby ikonę dało się zbudować przez
+     * `rememberVectorPainter` albo `painterResource`.
      */
     val options: TabOptions
         @Composable get
 
-
-
-    /** 
-     * Zwraca pierwszy ekran wyświetlany po przełączeniu na tę zakładkę.
-     * 
-     * Zazwyczaj jest to ekran raportu/listy głównej dla danej sekcji.
+    /**
+     * Tworzy ekran główny zakładki, czyli dno jej stosu. `AppRouter.initialize` woła to raz, a
+     * `AppRouter.goBack` tego ekranu nie zdejmuje.
      */
     fun getInitialScreen(): Screen
 
     /**
-     * Określa, czy zakładka powinna być renderowana
-     * w głównym pasku nawigacyjnym (np. AppTopBar).
-     * Ustawienie na `false` pozwala na "ukrycie" zakładki,
-     * do której nawigacja odbywa się w inny sposób (np. przez przycisk ustawień bądź API).
+     * `false` chowa zakładkę z paska. Otwiera się ją wtedy tylko po [id], tak jak ustawienia z przycisku w
+     * górnym pasku.
      */
     val isVisibleInNavBar: Boolean
-        get() = true // Domyślna implementacja
+        get() = true
 }
 

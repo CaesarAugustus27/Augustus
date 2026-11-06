@@ -16,15 +16,8 @@ import org.octavius.navigation.AppNavigationState
 import org.octavius.navigation.Tab
 
 /**
- * Komponent UI wyświetlający główny pasek zakładek aplikacji.
- *
- * Renderuje listę zakładek, podświetlając aktualnie wybraną i umożliwiając nawigację
- * między głównymi sekcjami aplikacji. Każda zakładka składa się z ikony i tekstu,
- * a aktywna zakładka ma odmiennu kolor.
- *
- * @param tabs Lista obiektów [Tab] do wyświetlenia
- * @param currentState Aktualny stan nawigacji używany do określenia aktywnej zakładki
- * @param onTabSelected Callback wywoływany po kliknięciu zakładki, przekazuje jej indeks
+ * Pasek zakładek: [tabs] po równo na całą szerokość, aktywna z [currentState] podświetlona. Kliknięta
+ * zakładka trafia do [onTabSelected].
  */
 @Composable
 fun AppTopBar(
