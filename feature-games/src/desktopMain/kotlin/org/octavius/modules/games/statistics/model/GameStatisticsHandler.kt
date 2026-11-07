@@ -9,7 +9,7 @@ import org.koin.core.component.inject
 import io.github.octaviusframework.client.OctaviusClient
 import io.github.octaviusframework.client.DataResult
 import io.github.octaviusframework.driver.exception.OctaviusException
-import kotlinx.coroutines.Dispatchers
+import io.github.octaviusframework.driver.concurrent.OctaviusDispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.octavius.dialog.ErrorDialogConfig
@@ -166,7 +166,7 @@ class GameStatisticsHandler(val scope: CoroutineScope) : KoinComponent {
     fun loadData() {
         scope.launch {
             val query = buildGameStatisticsQuery()
-            val result = withContext(Dispatchers.IO) {
+            val result = withContext(OctaviusDispatchers.Virtual) {
                 db.rawQuery(query).asResult().fetchObjectStrict<GameStatisticsData>()
             }
             when (result) {

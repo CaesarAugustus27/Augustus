@@ -4,7 +4,7 @@ import io.github.octaviusframework.client.DataResult
 import io.github.octaviusframework.client.OctaviusClient
 import io.github.octaviusframework.client.query.QueryFragment
 import io.github.octaviusframework.client.query.withParam
-import kotlinx.coroutines.Dispatchers
+import io.github.octaviusframework.driver.concurrent.OctaviusDispatchers
 import kotlinx.coroutines.withContext
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -71,7 +71,7 @@ class DatabaseControl(
      * `RepeatableControl.registerChildrenInGlobalMap`), so a field on the instance would mix rows up. The
      * proper cache is the state keyed by path.
      */
-    override suspend fun resolveDisplayText(value: Int): String? = withContext(Dispatchers.IO) {
+    override suspend fun resolveDisplayText(value: Int): String? = withContext(OctaviusDispatchers.Virtual) {
         // Nullable T on purpose: the row may have disappeared from under the saved id, and with a non-null
         // type a missing row and NULL throw an exception that .asResult() does not turn into a Failure.
         val result = db.select(displayColumn).fromSubquery(query.sql).where("$idColumn = @selectedId")
@@ -88,7 +88,7 @@ class DatabaseControl(
     }
 
     override suspend fun loadPage(searchQuery: String, page: Long): DropdownPage<Int> {
-        return withContext(Dispatchers.IO) {
+        return withContext(OctaviusDispatchers.Virtual) {
             val search = buildSearchFilter(searchQuery)
 
             // Fetch one row more than the page: if it came, there is more to load.

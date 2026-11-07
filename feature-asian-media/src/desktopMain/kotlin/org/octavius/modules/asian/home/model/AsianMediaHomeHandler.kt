@@ -9,7 +9,7 @@ import org.koin.core.component.inject
 import io.github.octaviusframework.client.OctaviusClient
 import io.github.octaviusframework.client.DataResult
 import io.github.octaviusframework.driver.exception.OctaviusException
-import kotlinx.coroutines.Dispatchers
+import io.github.octaviusframework.driver.concurrent.OctaviusDispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.octavius.dialog.ErrorDialogConfig
@@ -107,7 +107,7 @@ class AsianMediaHomeHandler(
     fun loadData() {
         scope.launch {
             val finalSelectClause = getSql()
-            val result = withContext(Dispatchers.IO) {
+            val result = withContext(OctaviusDispatchers.Virtual) {
                 db.select(finalSelectClause)
                     .asResult().fetchObjectStrict<DashboardData>()
             }

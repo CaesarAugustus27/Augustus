@@ -1,6 +1,7 @@
 package org.octavius.report.component
 
 import androidx.compose.runtime.compositionLocalOf
+import io.github.octaviusframework.driver.concurrent.OctaviusDispatchers
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -34,7 +35,7 @@ val LocalReportHandler = compositionLocalOf<ReportHandler> { error("No ReportHan
  */
 class ReportHandler(
     reportStructureBuilder: ReportStructureBuilder,
-    private val handlerScope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private val handlerScope: CoroutineScope = CoroutineScope(SupervisorJob() + OctaviusDispatchers.Virtual)
 ) {
     val reportStructure: ReportStructure = reportStructureBuilder.build()
 

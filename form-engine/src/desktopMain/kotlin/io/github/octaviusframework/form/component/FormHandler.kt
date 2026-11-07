@@ -1,6 +1,7 @@
 package io.github.octaviusframework.form.component
 
 import androidx.compose.runtime.State
+import io.github.octaviusframework.driver.concurrent.OctaviusDispatchers
 import kotlinx.coroutines.*
 import org.octavius.dialog.ErrorDialogConfig
 import org.octavius.dialog.GlobalDialogManager
@@ -40,7 +41,7 @@ class FormHandler(
     val formDataManager: FormDataManager,
     val formValidator: FormValidator = FormValidator(),
     private val payload: Map<String, Any?> = emptyMap(),
-    private val handlerScope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private val handlerScope: CoroutineScope = CoroutineScope(SupervisorJob() + OctaviusDispatchers.Virtual)
 ) : FormActionTrigger {
     private val formState: FormState = FormState()
     // Field errors are keyed by the same full path as control states, including repeatable rows.

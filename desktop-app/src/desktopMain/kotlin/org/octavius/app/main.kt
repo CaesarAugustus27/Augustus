@@ -10,6 +10,7 @@ import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.*
 import io.github.octaviusframework.client.OctaviusClient
+import io.github.octaviusframework.driver.concurrent.OctaviusDispatchers
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.collectLatest
 import org.koin.core.Koin
@@ -38,7 +39,7 @@ private enum class AppState {
 }
 
 fun main() {
-    // Wyjątek, który przeleciał przez wszystko (np. korutyna na Dispatchers.IO bez własnego handlera),
+    // Wyjątek, który przeleciał przez wszystko (np. korutyna na OctaviusDispatchers.Virtual bez własnego handlera),
     // trafia do logu i dialogu, a nie tylko na konsolę.
     Thread.setDefaultUncaughtExceptionHandler { _, error -> showUnhandledError(error) }
 
@@ -121,7 +122,7 @@ private fun ApplicationScope.AppLoadingScreen(
     }
 
     LaunchedEffect(Unit) {
-        val success = withContext(Dispatchers.IO) {
+        val success = withContext(OctaviusDispatchers.Virtual) {
             try {
                 koin.get<OctaviusClient>()
                 true
