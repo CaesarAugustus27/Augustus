@@ -24,9 +24,11 @@ of media is a feature module with its own tab, database schema, forms and report
 | `feature-games`       | Games, with series, categories, play time and ratings           |
 | `feature-books`       | Books and authors                                               |
 | `feature-sandbox`     | Every form control and report column, with no tables of its own |
+| `feature-spotify`     | A copy of the trash of its Spotify extension, with no tab       |
 
 A [browser extension](#browser-extension) adds series from NovelUpdates and MangaUpdates, and repeats in the catalogue
-what you do on NovelUpdates and SteamDB.
+what you do on NovelUpdates and SteamDB. A [Spicetify extension](#spotify-trashbin) skips the songs and artists you never
+want Spotify to play, and keeps a copy of them.
 
 The application is built on these parts:
 
@@ -79,6 +81,7 @@ Augustus/
 ├── feature-books/
 ├── feature-games/
 ├── feature-sandbox/
+├── feature-spotify/         # Trash copy API and its Spicetify extension (spicetify/)
 ├── feature-contract/        # FeatureModule and ApiModule interfaces
 │
 ├── api-server/              # Embedded Ktor server for the extension
@@ -205,3 +208,42 @@ and `jsMain` holds the page parsers. The routes are defined in `AsianMediaApi` a
 | `POST /api/asian-media/open`                   | popup      | Opens a title's form                         |
 | `POST /api/asian-media/novelupdates/list-move` | background | Repeats a reading list move                  |
 | `POST /api/games/steam/ignore`                 | background | Repeats an ignored game                      |
+
+## Spotify Trashbin
+
+`feature-spotify/spicetify/trashbin.js` is a Spicetify extension that skips the songs and artists you put in its trash
+and keeps a copy of the trash in Augustus. The idea, the storage keys and the storage format come from Spicetify's
+[Trashbin](https://github.com/spicetify/cli/blob/main/Extensions/trashbin.js), so a trash that Trashbin left behind
+keeps working.
+
+```bash
+./gradlew :feature-spotify:installTrashbin
+```
+
+copies it to `%APPDATA%\spicetify\Extensions` and runs `spicetify apply`, which restarts Spotify. The extension has to be
+enabled once with `spicetify config extensions trashbin.js`.
+
+The extension's labels and messages are in Polish. "Wrzuć do kosza" (put in the trash) is in the context menu of songs
+and artists, in a button next to the heart in every tracklist row, and in the player bar for the song that is playing.
+A song in the trash, or by an artist in the trash, is skipped when it starts and when it goes to the trash while
+playing. Going back to it with the previous button plays it. The settings, under "Kosz" (trash) in the profile menu,
+turn the player bar button on and off and show the size of the trash.
+
+The trash itself stays in Spotify's local storage, as bare URIs, because the extension has to skip a song at once, with
+or without the application. The copy in Augustus works like this:
+
+- After every change, and 5 seconds after Spotify starts, the extension sends the whole trash. The application only adds
+  to its copy, so losing the local storage, for example by reinstalling Spotify, leaves the copy as it was.
+- Only "Wyjmij z kosza" (take out of the trash) deletes from the copy. A removal made while the application is down
+  waits in local storage and goes out before the next sync.
+- For entries the copy has no description of, the extension asks Spotify, with the same GraphQL queries the client
+  uses, and sends the title, album and artists of each song and the name of each artist.
+- "Przywróć z Augustusa" (restore from Augustus) in the settings adds back everything the copy has and local storage
+  lacks.
+
+| Route                              | Effect                                                       |
+|------------------------------------|--------------------------------------------------------------|
+| `GET /api/spotify/trash`           | URIs of everything in the trash                              |
+| `POST /api/spotify/trash/sync`     | Adds missing entries, returns the URIs without a description |
+| `POST /api/spotify/trash/describe` | Saves titles, albums and artists                             |
+| `POST /api/spotify/trash/remove`   | Removes entries taken out of the trash                       |
