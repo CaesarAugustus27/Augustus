@@ -1,8 +1,10 @@
 (async function trashbin() {
+    const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
     // Spicetify wystawia swoje API dopiero po załadowaniu klienta
     const API = ["LocalStorage", "React", "ReactDOM", "ContextMenu", "Menu", "PopupModal"];
     while (!Spicetify.Player?.data || API.some((name) => !Spicetify[name])) {
-        await new Promise((resolve) => setTimeout(resolve, 500));
+        await sleep(500);
     }
 
     const {React, ReactDOM} = Spicetify;
@@ -85,23 +87,120 @@
             Spicetify.showNotification(`${what} w koszu, będzie pomijany`);
         }
         storeTrash();
-        if (list[uri] && isPlaying(uri)) Spicetify.Player.next();
+        if (list[uri] && isPlaying(uri)) skipTrashed(Spicetify.Player.data.item).catch(console.error);
     }
 
     //----------------------------------------------------Pomijanie-----------------------------------------------------
+    //
+    // Utwór z kosza przeskakujemy jednym skokiem do pierwszego spoza kosza w kolejce klienta. Kolejka to okno
+    // najwyżej 80 utworów, kończy się z końcem kontekstu (playlisty, albumu), przy powtarzaniu zwykle też, i dogania
+    // songchange po ułamku sekundy. Dlatego:
+    // - dopóki nie dogoni, pokazuje stan sprzed zmiany; jeśli grający utwór jest w niej jeszcze przed nami, a za nim
+    //   coś spoza kosza, skaczemy od razu, a na resztę decyzji czekamy na kolejkę, która go już ma jako bieżący;
+    // - w oknie same utwory z kosza: skok na ostatni z nich i dalej przy jego songchange;
+    // - puste okno: bez powtarzania to koniec, więc pauza; z powtarzaniem next(), które zawija na początek;
+    // - utwór już minięty w tym ciągu skoków to pełne okrążenie, więc też pauza.
+
+    const QUEUE_WAIT_MS = 3000;
+    let skipRun = 0; // numer zmiany; skok liczony na starej kolejce nie może przebić nowszej zmiany utworu
+    let passed = new Set(); // utwory z kosza minięte od ostatniego utworu spoza kosza
+    let passedContext = null;
+
+    // uid odróżnia powtórzenia tego samego utworu w kontekście; utwór bez uid rozpoznajemy po URI
+    const trackKey = (track) => track.uid || track.uri;
 
     function onSongChange() {
         syncPlaybarButton();
+
+        const context = Spicetify.Player.data?.context?.uri ?? null;
+        const newContext = context !== passedContext;
+        if (newContext) {
+            passed = new Set();
+            passedContext = context;
+        }
 
         // Powrót przyciskiem „Poprzedni” do utworu z kosza: użytkownik chce go posłuchać. Kliknięcie jest ważne przez
         // BACK_WINDOW_MS i tylko dla najbliższej zmiany utworu, więc cofnięcie na początek tego samego utworu nie
         // wyłącza pomijania na później.
         const wentBack = Date.now() - backPressedAt < BACK_WINDOW_MS;
         backPressedAt = 0;
-        if (wentBack) return;
 
         const item = Spicetify.Player.data?.item;
-        if (item && isTrashed(item)) Spicetify.Player.next();
+        if (wentBack || !item || !isTrashed(item)) {
+            skipRun++;
+            passed.clear();
+            return;
+        }
+        skipTrashed(item, newContext).catch(console.error);
+    }
+
+    async function skipTrashed(item, newContext = false) {
+        const run = ++skipRun;
+        if (passed.has(trackKey(item))) return stopPlayback();
+        passed.add(trackKey(item));
+
+        const early = upcomingAfter(item, Spicetify.Player.origin.getQueue())?.find((track) => !isTrashed(track));
+        if (early) return skipTo(early);
+
+        const upcoming = await currentUpcoming(item, newContext);
+        if (run !== skipRun) return;
+        if (!upcoming) return Spicetify.Player.next();
+
+        const target = upcoming.find((track) => !isTrashed(track));
+        if (target) return skipTo(target);
+        if (!upcoming.length) return Spicetify.Player.getRepeat() === 0 ? stopPlayback() : Spicetify.Player.next();
+
+        // Ostatniego nie oznaczamy, bo na nim wylądujemy
+        upcoming.slice(0, -1).forEach((track) => passed.add(trackKey(track)));
+        return skipTo(upcoming[upcoming.length - 1]);
+    }
+
+    const skipTo = (track) => Spicetify.Player.origin.skipToNext({uri: track.uri, uid: track.uid});
+
+    // Utwory, które według kolejki są za item; null, jeśli kolejka item nie zawiera
+    function upcomingAfter(item, queue) {
+        const upcoming = [...queue.queued, ...queue.nextUp];
+        if (queue.current && trackKey(queue.current) === trackKey(item)) return upcoming;
+        const index = upcoming.findIndex((track) => trackKey(track) === trackKey(item));
+        return index === -1 ? null : upcoming.slice(index + 1);
+    }
+
+    // Utwory za item według kolejki, która ma go już jako bieżący; null, jeśli kolejka nie nadąży.
+    //
+    // Czekamy na zdarzenie queue_update, a nie odpytujemy, bo Spotify w tle ma przyhamowane timery. Pusta kolejka
+    // z getQueue() bywa chwilowa (zaraz po zmianie utworu), ale zdarzenie z pustą klient wysyła dopiero, gdy przez 500 ms
+    // nic jej nie zastąpi, więc to ono potwierdza koniec. Wyjątkiem jest świeżo puszczony kontekst: klient wczytuje
+    // go dłużej i zdąży ogłosić pustą kolejkę, zanim dojdzie reszta, więc tam koniec potwierdza dopiero QUEUE_WAIT_MS.
+    function currentUpcoming(item, newContext) {
+        const api = Spicetify.Player.origin;
+        const events = api.getEvents();
+        const upcomingOf = (queue) =>
+            queue?.current && trackKey(queue.current) === trackKey(item) ? [...queue.queued, ...queue.nextUp] : null;
+
+        return new Promise((resolve) => {
+            const done = (upcoming) => {
+                clearTimeout(timeout);
+                events.removeListener("queue_update", onUpdate);
+                resolve(upcoming);
+            };
+            const onUpdate = (event) => {
+                const upcoming = upcomingOf(event.data);
+                if (upcoming && (upcoming.length || !newContext)) done(upcoming);
+            };
+            // Zdarzenie mogło przyjść, zanim zaczęliśmy słuchać; kolejka, która przez QUEUE_WAIT_MS się nie zmieniła,
+            // też jest pewna
+            const timeout = setTimeout(() => done(upcomingOf(api.getQueue())), QUEUE_WAIT_MS);
+            events.addListener("queue_update", onUpdate);
+
+            const upcoming = upcomingOf(api.getQueue());
+            if (upcoming?.length) done(upcoming);
+        });
+    }
+
+    function stopPlayback() {
+        passed.clear();
+        Spicetify.Player.pause();
+        Spicetify.showNotification("Dalej są już tylko utwory z kosza");
     }
 
     // Nasłuch na całym dokumencie, bo Spotify potrafi przerenderować pasek odtwarzacza razem z przyciskiem
@@ -121,6 +220,7 @@
     // utworów) i getArtistNameAndTracks (URI wykonawcy).
 
     const DESCRIBE_BATCH = 50;
+    const DESCRIBE_PAUSE_MS = 200; // przerwa między zapytaniami, żeby nie zasypać Spotify, kiedy do opisania jest cały kosz
     const unavailable = new Set(); // URI, których Spotify nie zna (np. utwór usunięty z serwisu) - do restartu nie pytamy ponownie
     let syncing = null;
     let syncAgain = false;
@@ -190,7 +290,7 @@
                 tracks: descriptions,
                 artists: []
             })).described;
-            await pause();
+            await sleep(DESCRIBE_PAUSE_MS);
         }
 
         for (const uri of artists) {
@@ -200,7 +300,7 @@
             const name = artistUnion.profile?.name;
             if (!name) unavailable.add(uri);
             else described += (await postToAugustus("/describe", {tracks: [], artists: [{uri, name}]})).described;
-            await pause();
+            await sleep(DESCRIBE_PAUSE_MS);
         }
 
         if (long) Spicetify.showNotification(`Trashbin: opisy wysłane do Augustusa: ${described}`);
@@ -218,9 +318,6 @@
         } : null;
         return {uri, title: track.name, album, artists};
     }
-
-    // Krótka przerwa między zapytaniami, żeby nie zasypać Spotify, kiedy do opisania jest cały kosz
-    const pause = () => new Promise((resolve) => setTimeout(resolve, 200));
 
     async function flushRemovals() {
         if (!pendingRemovals.length) return;

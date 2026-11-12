@@ -226,8 +226,10 @@ enabled once with `spicetify config extensions trashbin.js`.
 The extension's labels and messages are in Polish. "Wrzuć do kosza" (put in the trash) is in the context menu of songs
 and artists, in a button next to the heart in every tracklist row, and in the player bar for the song that is playing.
 A song in the trash, or by an artist in the trash, is skipped when it starts and when it goes to the trash while
-playing. Going back to it with the previous button plays it. The settings, under "Kosz" (trash) in the profile menu,
-turn the player bar button on and off and show the size of the trash.
+playing. Going back to it with the previous button plays it. A run of such songs is skipped in one jump, not one song
+at a time. When only songs from the trash are left until the end of the playlist or album, playback pauses; with
+repeat on, it pauses only when the whole playlist is in the trash. The settings, under "Kosz" (trash) in the profile
+menu, turn the player bar button on and off and show the size of the trash.
 
 The trash itself stays in Spotify's local storage, as bare URIs, because the extension has to skip a song at once, with
 or without the application. The copy in Augustus works like this:
