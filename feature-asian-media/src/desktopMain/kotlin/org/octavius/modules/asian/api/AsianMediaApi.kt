@@ -140,8 +140,6 @@ class AsianMediaApi : ApiModule, KoinComponent {
 
             val request = call.receive<PublicationAddRequest>()
 
-            val plan = TransactionPlan()
-
             // Tytuły przychodzą przefiltrowane przez parser we wtyczce, ale ten filtr jest pisany
             // na zakresach znaków i przepuszcza pisma, których nikt nie wypisał. Tutaj stoi filtr na
             // skrypcie Unicode, więc ostatnie słowo ma aplikacja. Gdyby wyciął wszystko, bierzemy to,
@@ -149,46 +147,44 @@ class AsianMediaApi : ApiModule, KoinComponent {
             val titles = request.titles.filter { it.isNotBlank() && it.isLatinScript() }
                 .ifEmpty { request.titles }
 
-            // Krok 1: Wstaw tytuł i uzyskaj bezpieczny uchwyt do jego przyszłego ID
-            val titleData = mapOf(
-                "titles" to titles.withPgType(PgStandardType.TEXT_ARRAY),
-                "language" to request.language
-            )
-            val titleIdHandle = plan.add(
-                db.insertInto("asian_media.titles")
+            val (plan, titleIdHandle) = with(TransactionPlan()) {
+                // Krok 1: Wstaw tytuł i uzyskaj bezpieczny uchwyt do jego przyszłego ID
+                val titleData = mapOf(
+                    "titles" to titles.withPgType(PgStandardType.TEXT_ARRAY),
+                    "language" to request.language
+                )
+                val titleIdHandle = insertInto("asian_media.titles")
                     .values(titleData)
                     .returning("id")
                     .asStep()
                     .fetchField<Int>(titleData)
-            )
 
-            // Krok 2: Wstaw publikację, używając referencji do ID z kroku 1
-            val publicationData = mapOf(
-                "publication_type" to request.type,
-                "status" to PublicationStatus.Trash,
-                "track_progress" to false,
-                "title_id" to titleIdHandle.value()
-            )
-            plan.add(
-                db.insertInto("asian_media.publications")
+                // Krok 2: Wstaw publikację, używając referencji do ID z kroku 1
+                val publicationData = mapOf(
+                    "publication_type" to request.type,
+                    "status" to PublicationStatus.Trash,
+                    "track_progress" to false,
+                    "title_id" to titleIdHandle.value()
+                )
+                insertInto("asian_media.publications")
                     .values(publicationData)
                     .asStep()
                     .executeUpdate(publicationData)
-            )
 
-            // Krok 3: Identyfikator serii na stronie, z której dodajemy - po nim popup rozpozna ją następnym razem
-            request.externalId?.let { externalId ->
-                val externalIdData = mapOf(
-                    "title_id" to titleIdHandle.value(),
-                    "site" to externalId.site,
-                    "external_id" to externalId.id
-                )
-                plan.add(
-                    db.insertInto("asian_media.title_external_ids")
+                // Krok 3: Identyfikator serii na stronie, z której dodajemy - po nim popup rozpozna ją następnym razem
+                request.externalId?.let { externalId ->
+                    val externalIdData = mapOf(
+                        "title_id" to titleIdHandle.value(),
+                        "site" to externalId.site,
+                        "external_id" to externalId.id
+                    )
+                    insertInto("asian_media.title_external_ids")
                         .values(externalIdData)
                         .asStep()
                         .executeUpdate(externalIdData)
-                )
+                }
+
+                this to titleIdHandle
             }
 
             // Wykonanie planu

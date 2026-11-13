@@ -65,13 +65,12 @@ class AsianMediaFormDataManager : FormDataManager() {
 
     fun processDelete(formResultData: FormResultData): Boolean {
         // Wykorzystanie CASCADE
-        val plan = TransactionPlan()
-        plan.add(
-            db.deleteFrom("asian_media.titles")
+        val plan = TransactionPlan().apply {
+            deleteFrom("asian_media.titles")
                 .where("id = @id")
                 .asStep()
                 .executeUpdate("id" to formResultData.getInitial("id"))
-        )
+        }
 
         return when (val result = dbResult { db.executeTransactionPlan(plan) }) {
             is DataResult.Failure -> {
@@ -85,98 +84,92 @@ class AsianMediaFormDataManager : FormDataManager() {
     fun processSave(formResultData: FormResultData): Boolean {
         val plan = TransactionPlan()
 
-        // =================================================================================
-        // KROK 1: Główna encja 'titles'
-        // =================================================================================
-        val titleIdRef: TransactionValue<Int>
+        with(plan) {
+            // =================================================================================
+            // KROK 1: Główna encja 'titles'
+            // =================================================================================
+            val titleIdRef: TransactionValue<Int>
 
-        val titleData = mapOf(
-            "titles" to formResultData.getCurrent("title_info/titles"),
-            "language" to formResultData.getCurrent("title_info/language")
-        )
+            val titleData = mapOf(
+                "titles" to formResultData.getCurrent("title_info/titles"),
+                "language" to formResultData.getCurrent("title_info/language")
+            )
 
-        if (formResultData.getInitial("id") != null) {
-            // TRYB EDYCJI: ID jest znane.
-            titleIdRef = formResultData.getInitialAs<Int>("id").toTransactionValue()
-            plan.add(
-                db.update("asian_media.titles")
+            if (formResultData.getInitial("id") != null) {
+                // TRYB EDYCJI: ID jest znane.
+                titleIdRef = formResultData.getInitialAs<Int>("id").toTransactionValue()
+                update("asian_media.titles")
                     .setValues(titleData)
                     .where("id = @id")
                     .asStep()
                     .executeUpdate(titleData + mapOf("id" to titleIdRef))
-            )
-        } else {
-            titleIdRef = plan.add(
-                db.insertInto("asian_media.titles")
+            } else {
+                titleIdRef = insertInto("asian_media.titles")
                     .values(titleData)
                     .returning("id")
                     .asStep()
                     .fetchField<Int>(titleData)
-            ).value()
-        }
+                    .value()
+            }
 
-        // =================================================================================
-        // KROK 2: Obsługa pod-encji 'publications'
-        // =================================================================================
-        val publicationsResult = formResultData.getCurrentAs<RepeatableResultValue>("publications")
+            // =================================================================================
+            // KROK 2: Obsługa pod-encji 'publications'
+            // =================================================================================
+            val publicationsResult = formResultData.getCurrentAs<RepeatableResultValue>("publications")
 
-        // --- TRYB EDYCJI: Rozpatrujemy zmiany ---
-        if (formResultData.getInitial("id") != null) {
-            // Usunięte publikacje
-            publicationsResult.deletedRows.forEach { rowData ->
-                val pubId = rowData.getInitialAs<Int>("id")
-                plan.add(
-                    db.deleteFrom("asian_media.publications")
+            // --- TRYB EDYCJI: Rozpatrujemy zmiany ---
+            if (formResultData.getInitial("id") != null) {
+                // Usunięte publikacje
+                publicationsResult.deletedRows.forEach { rowData ->
+                    val pubId = rowData.getInitialAs<Int>("id")
+                    deleteFrom("asian_media.publications")
                         .where("id = @id")
                         .asStep()
                         .executeUpdate("id" to pubId)
-                )
-            }
+                }
 
-            // Zmodyfikowane publikacje
-            publicationsResult.modifiedRows.forEach { rowData ->
-                val pubId = rowData.getInitialAs<Int>("id")
-                val publicationIdRef = pubId.toTransactionValue()
-                val publicationData = mapOf(
-                    "publication_type" to rowData.getCurrent("publication_type"),
-                    "status" to rowData.getCurrent("status"),
-                    "track_progress" to rowData.getCurrent("track_progress")
-                )
+                // Zmodyfikowane publikacje
+                publicationsResult.modifiedRows.forEach { rowData ->
+                    val pubId = rowData.getInitialAs<Int>("id")
+                    val publicationIdRef = pubId.toTransactionValue()
+                    val publicationData = mapOf(
+                        "publication_type" to rowData.getCurrent("publication_type"),
+                        "status" to rowData.getCurrent("status"),
+                        "track_progress" to rowData.getCurrent("track_progress")
+                    )
 
-                plan.add(
-                    db.update("asian_media.publications")
+                    update("asian_media.publications")
                         .setValues(publicationData)
                         .where("id = @id")
                         .asStep()
                         .executeUpdate(publicationData + mapOf("id" to publicationIdRef))
+
+                    // Warunkowo zaktualizuj powiązane 'publication_volumes'
+                    addPublicationVolumesUpdateOperation(plan, rowData, publicationIdRef)
+                }
+            }
+
+            // --- TRYB TWORZENIA lub DODAWANIA NOWYCH (wspólna logika) ---
+            // W trybie tworzenia `allCurrentRows` = `addedRows`
+            val rowsToAdd = if (formResultData.getInitial("id") == null) publicationsResult.allCurrentRows else publicationsResult.addedRows
+
+            rowsToAdd.forEach { rowData ->
+                val publicationData = mapOf(
+                    "publication_type" to rowData.getCurrent("publication_type"),
+                    "status" to rowData.getCurrent("status"),
+                    "track_progress" to rowData.getCurrent("track_progress"),
+                    "title_id" to titleIdRef
                 )
 
-                // Warunkowo zaktualizuj powiązane 'publication_volumes'
-                addPublicationVolumesUpdateOperation(plan, rowData, publicationIdRef)
-            }
-        }
-
-        // --- TRYB TWORZENIA lub DODAWANIA NOWYCH (wspólna logika) ---
-        // W trybie tworzenia `allCurrentRows` = `addedRows`
-        val rowsToAdd = if (formResultData.getInitial("id") == null) publicationsResult.allCurrentRows else publicationsResult.addedRows
-
-        rowsToAdd.forEach { rowData ->
-            val publicationData = mapOf(
-                "publication_type" to rowData.getCurrent("publication_type"),
-                "status" to rowData.getCurrent("status"),
-                "track_progress" to rowData.getCurrent("track_progress"),
-                "title_id" to titleIdRef
-            )
-
-            val newPublicationIdRef = plan.add(
-                db.insertInto("asian_media.publications")
+                val newPublicationIdRef = insertInto("asian_media.publications")
                     .values(publicationData)
                     .returning("id")
                     .asStep()
                     .fetchField<Int>(publicationData)
-            ).value()
+                    .value()
 
-            addPublicationVolumesUpdateOperation(plan, rowData, newPublicationIdRef)
+                addPublicationVolumesUpdateOperation(plan, rowData, newPublicationIdRef)
+            }
         }
 
         // Wykonanie całego planu
@@ -203,13 +196,13 @@ class AsianMediaFormDataManager : FormDataManager() {
                 "original_completed" to rowData.getCurrent("original_completed")
             )
 
-            plan.add(
-                db.update("asian_media.publication_volumes")
+            with(plan) {
+                update("asian_media.publication_volumes")
                     .setValues(volumesData)
                     .where("publication_id = @publication_id")
                     .asStep()
                     .executeUpdate(volumesData + mapOf("publication_id" to publicationIdRef))
-            )
+            }
         }
     }
 }

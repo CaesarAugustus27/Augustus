@@ -58,55 +58,51 @@ class BookFormDataManager : FormDataManager() {
     }
 
     private fun processSave(formResultData: FormResultData): Boolean {
-        val plan = TransactionPlan()
         val loadedId = formResultData.getInitial("id")
 
-        // =================================================================================
-        // KROK 1: Główna encja 'books'
-        // =================================================================================
-        val bookIdRef: TransactionValue<Int>
+        val plan = TransactionPlan().apply {
+            // =================================================================================
+            // KROK 1: Główna encja 'books'
+            // =================================================================================
+            val bookIdRef: TransactionValue<Int>
 
-        val bookData = mapOf(
-            "title_pl" to formResultData.getCurrent("basic_info/title_pl"),
-            "title_eng" to formResultData.getCurrent("basic_info/title_eng"),
-            "status" to formResultData.getCurrent("basic_info/status")
-        )
+            val bookData = mapOf(
+                "title_pl" to formResultData.getCurrent("basic_info/title_pl"),
+                "title_eng" to formResultData.getCurrent("basic_info/title_eng"),
+                "status" to formResultData.getCurrent("basic_info/status")
+            )
 
-        if (loadedId != null) {
-            bookIdRef = (loadedId as Int).toTransactionValue()
-            plan.add(
-                db.update("books.books")
+            if (loadedId != null) {
+                bookIdRef = (loadedId as Int).toTransactionValue()
+                update("books.books")
                     .setValues(bookData)
                     .setExpression("updated_at", "NOW()")
                     .where("id = @id")
                     .asStep()
                     .executeUpdate(bookData + mapOf("id" to bookIdRef))
-            )
-        } else {
-            bookIdRef = plan.add(
-                db.insertInto("books.books")
+            } else {
+                bookIdRef = insertInto("books.books")
                     .values(bookData)
                     .returning("id")
                     .asStep()
                     .fetchField<Int>(bookData)
-            ).value()
-        }
+                    .value()
+            }
 
-        // =================================================================================
-        // KROK 2: Obsługa tabeli łączącej many-to-many (autorzy)
-        // =================================================================================
-        val authorsResult = formResultData.getCurrentAs<RepeatableResultValue>("authors")
+            // =================================================================================
+            // KROK 2: Obsługa tabeli łączącej many-to-many (autorzy)
+            // =================================================================================
+            val authorsResult = formResultData.getCurrentAs<RepeatableResultValue>("authors")
 
-        // Usunięci i zmodyfikowani autorzy (stare wartości do usunięcia)
-        val deletedAuthors = authorsResult.deletedRows.map { rowData ->
-            rowData.getInitialAs<Int>("author_id")
-        } + authorsResult.modifiedRows.map { rowData ->
-            rowData.getInitialAs<Int>("author_id")
-        }
+            // Usunięci i zmodyfikowani autorzy (stare wartości do usunięcia)
+            val deletedAuthors = authorsResult.deletedRows.map { rowData ->
+                rowData.getInitialAs<Int>("author_id")
+            } + authorsResult.modifiedRows.map { rowData ->
+                rowData.getInitialAs<Int>("author_id")
+            }
 
-        if (deletedAuthors.isNotEmpty()) {
-            plan.add(
-                db.deleteFrom("books.book_to_authors bta")
+            if (deletedAuthors.isNotEmpty()) {
+                deleteFrom("books.book_to_authors bta")
                     .using("UNNEST(@ids_to_delete) AS t(id)")
                     .where("bta.author_id = t.id AND bta.book_id = @book_id")
                     .asStep()
@@ -114,21 +110,19 @@ class BookFormDataManager : FormDataManager() {
                         "ids_to_delete" to deletedAuthors.withPgType(PgStandardType.INT4_ARRAY),
                         "book_id" to bookIdRef
                     )
-            )
-        }
+            }
 
-        // Dodani i zmodyfikowani autorzy (nowe wartości do wstawienia)
-        val insertedAuthors = authorsResult.addedRows.map { rowData ->
-            rowData.getCurrentAs<Int>("author_id")
-        } + authorsResult.modifiedRows.map { rowData ->
-            rowData.getCurrentAs<Int>("author_id")
-        }
+            // Dodani i zmodyfikowani autorzy (nowe wartości do wstawienia)
+            val insertedAuthors = authorsResult.addedRows.map { rowData ->
+                rowData.getCurrentAs<Int>("author_id")
+            } + authorsResult.modifiedRows.map { rowData ->
+                rowData.getCurrentAs<Int>("author_id")
+            }
 
-        if (insertedAuthors.isNotEmpty()) {
-            plan.add(
-                db.insertInto("books.book_to_authors")
+            if (insertedAuthors.isNotEmpty()) {
+                insertInto("books.book_to_authors")
                     .fromSelect(
-                        db.select("@book_id", "author_id")
+                        select("@book_id", "author_id")
                             .from("UNNEST(@ids_to_insert) AS author_id")
                             .toSql()
                     )
@@ -137,7 +131,7 @@ class BookFormDataManager : FormDataManager() {
                         "ids_to_insert" to insertedAuthors.withPgType(PgStandardType.INT4_ARRAY),
                         "book_id" to bookIdRef
                     )
-            )
+            }
         }
 
         return when (val result = dbResult { db.executeTransactionPlan(plan) }) {

@@ -95,13 +95,12 @@ class GameFormDataManager : FormDataManager() {
 
     fun processDelete(formResultData: FormResultData): Boolean {
         // Wykorzystanie CASCADE
-        val plan = TransactionPlan()
-        plan.add(
-            db.deleteFrom("games.games")
+        val plan = TransactionPlan().apply {
+            deleteFrom("games.games")
                 .where("id = @id")
                 .asStep()
                 .executeUpdate("id" to formResultData.getInitial("id"))
-        )
+        }
 
         return when (val result = dbResult { db.executeTransactionPlan(plan) }) {
             is DataResult.Failure -> {
@@ -117,119 +116,114 @@ class GameFormDataManager : FormDataManager() {
         val statusesWithDetails = listOf(GameStatus.WithoutTheEnd, GameStatus.Playing, GameStatus.Played)
         val loadedId = formResultData.getInitialAs<Int?>("id")
 
-        // =================================================================================
-        // KROK 1: Główna encja 'games'
-        // =================================================================================
-        val gameIdRef: TransactionValue<Int>
+        with(plan) {
+            // =================================================================================
+            // KROK 1: Główna encja 'games'
+            // =================================================================================
+            val gameIdRef: TransactionValue<Int>
 
-        val gameData = mapOf(
-            "name" to formResultData.getCurrent("basic_info/name"),
-            "series" to formResultData.getCurrent("basic_info/series"),
-            "status" to formResultData.getCurrent("basic_info/status")
-        )
+            val gameData = mapOf(
+                "name" to formResultData.getCurrent("basic_info/name"),
+                "series" to formResultData.getCurrent("basic_info/series"),
+                "status" to formResultData.getCurrent("basic_info/status")
+            )
 
-        // W zależności od tego, czy tworzymy nową grę, czy edytujemy istniejącą,
-        // nasza referencja do ID będzie albo stałą wartością, albo odwołaniem do wyniku przyszłej operacji.
-        if (loadedId != null) {
-            // === TRYB EDYCJI ===
-            // ID gry jest znane, więc używamy stałej wartości.
-            gameIdRef = loadedId.toTransactionValue()
-            // Zaktualizuj grę, przekazując wszystkie parametry
-            plan.add(
-                db.update("games.games")
+            // W zależności od tego, czy tworzymy nową grę, czy edytujemy istniejącą,
+            // nasza referencja do ID będzie albo stałą wartością, albo odwołaniem do wyniku przyszłej operacji.
+            if (loadedId != null) {
+                // === TRYB EDYCJI ===
+                // ID gry jest znane, więc używamy stałej wartości.
+                gameIdRef = loadedId.toTransactionValue()
+                // Zaktualizuj grę, przekazując wszystkie parametry
+                update("games.games")
                     .setValues(gameData)
                     .where("id = @id")
                     .asStep()
                     .executeUpdate(gameData + mapOf("id" to gameIdRef))
-            )
-        } else {
-            // Wstaw nową grę i pobierz jej ID jako referencję
-            gameIdRef = plan.add(
-                db.insertInto("games.games")
+            } else {
+                // Wstaw nową grę i pobierz jej ID jako referencję
+                gameIdRef = insertInto("games.games")
                     .values(gameData)
                     .returning("id")
                     .asStep()
                     .fetchField<Int>(gameData) // Używamy fetchField, bo chcemy pojedynczą wartość
-            ).value()
-        }
+                    .value()
+            }
 
-        val status = formResultData.getCurrentAs<GameStatus>("basic_info/status")
+            val status = formResultData.getCurrentAs<GameStatus>("basic_info/status")
 
-        // =================================================================================
-        // KROK 2: Obsługa tabel zależnych 1-do-1
-        // =================================================================================
+            // =================================================================================
+            // KROK 2: Obsługa tabel zależnych 1-do-1
+            // =================================================================================
 
-        // --- Obsługa Play Time ---
-        handleDependentTable(
-            plan = plan,
-            exists = formResultData.getCurrentAs("play_time_exists"),
-            conditionMet = status in statusesWithDetails,
-            tableName = "games.play_time",
-            data = mapOf(
-                "play_time_hours" to formResultData.getCurrent("play_time_section/play_time_hours"),
-                "completion_count" to formResultData.getCurrent("play_time_section/completion_count")
-            ),
-            gameIdRef = gameIdRef
-        )
+            // --- Obsługa Play Time ---
+            handleDependentTable(
+                plan = plan,
+                exists = formResultData.getCurrentAs("play_time_exists"),
+                conditionMet = status in statusesWithDetails,
+                tableName = "games.play_time",
+                data = mapOf(
+                    "play_time_hours" to formResultData.getCurrent("play_time_section/play_time_hours"),
+                    "completion_count" to formResultData.getCurrent("play_time_section/completion_count")
+                ),
+                gameIdRef = gameIdRef
+            )
 
-        // --- Obsługa Ratings ---
-        handleDependentTable(
-            plan = plan,
-            exists = formResultData.getCurrentAs("ratings_exists"),
-            conditionMet = status in statusesWithDetails,
-            tableName = "games.ratings",
-            data = mapOf(
-                "story_rating" to formResultData.getCurrent("ratings_section/story_rating"),
-                "gameplay_rating" to formResultData.getCurrent("ratings_section/gameplay_rating"),
-                "atmosphere_rating" to formResultData.getCurrent("ratings_section/atmosphere_rating")
-            ),
-            gameIdRef = gameIdRef
-        )
+            // --- Obsługa Ratings ---
+            handleDependentTable(
+                plan = plan,
+                exists = formResultData.getCurrentAs("ratings_exists"),
+                conditionMet = status in statusesWithDetails,
+                tableName = "games.ratings",
+                data = mapOf(
+                    "story_rating" to formResultData.getCurrent("ratings_section/story_rating"),
+                    "gameplay_rating" to formResultData.getCurrent("ratings_section/gameplay_rating"),
+                    "atmosphere_rating" to formResultData.getCurrent("ratings_section/atmosphere_rating")
+                ),
+                gameIdRef = gameIdRef
+            )
 
-        // --- Obsługa Characters ---
-        handleDependentTable(
-            plan = plan,
-            exists = formResultData.getCurrentAs("characters_exists"),
-            conditionMet = formResultData.getCurrentAs("basic_info/visible_characters_section"),
-            tableName = "games.characters",
-            data = mapOf(
-                "has_distinctive_character" to formResultData.getCurrent("characters_section/has_distinctive_character"),
-                "has_distinctive_protagonist" to formResultData.getCurrent("characters_section/has_distinctive_protagonist"),
-                "has_distinctive_antagonist" to formResultData.getCurrent("characters_section/has_distinctive_antagonist")
-            ),
-            gameIdRef = gameIdRef
-        )
+            // --- Obsługa Characters ---
+            handleDependentTable(
+                plan = plan,
+                exists = formResultData.getCurrentAs("characters_exists"),
+                conditionMet = formResultData.getCurrentAs("basic_info/visible_characters_section"),
+                tableName = "games.characters",
+                data = mapOf(
+                    "has_distinctive_character" to formResultData.getCurrent("characters_section/has_distinctive_character"),
+                    "has_distinctive_protagonist" to formResultData.getCurrent("characters_section/has_distinctive_protagonist"),
+                    "has_distinctive_antagonist" to formResultData.getCurrent("characters_section/has_distinctive_antagonist")
+                ),
+                gameIdRef = gameIdRef
+            )
 
-        // =================================================================================
-        // KROK 3: Obsługa tabeli łączącej many-to-many
-        // =================================================================================
+            // =================================================================================
+            // KROK 3: Obsługa tabeli łączącej many-to-many
+            // =================================================================================
 
-        val categoriesResult = formResultData.getCurrentAs<RepeatableResultValue>("categories")
-        // Usunięte kategorie
-        val deletedCategories = categoriesResult.deletedRows.map { rowData ->
-            rowData.getInitialAs<Int>("category")
-        } + categoriesResult.modifiedRows.map { rowData ->
-            rowData.getInitialAs<Int>("category")
-        }
+            val categoriesResult = formResultData.getCurrentAs<RepeatableResultValue>("categories")
+            // Usunięte kategorie
+            val deletedCategories = categoriesResult.deletedRows.map { rowData ->
+                rowData.getInitialAs<Int>("category")
+            } + categoriesResult.modifiedRows.map { rowData ->
+                rowData.getInitialAs<Int>("category")
+            }
 
-        plan.add(
-            db.deleteFrom("games.categories_to_games ctg")
+            deleteFrom("games.categories_to_games ctg")
                 .using("UNNEST(@ids_to_delete) AS t(id)")
                 .where("ctg.category_id = t.id AND ctg.game_id = @game_id")
                 .asStep().executeUpdate("ids_to_delete" to deletedCategories.withPgType(PgStandardType.INT4_ARRAY), "game_id" to gameIdRef)
-        )
 
-        val insertedCategories = categoriesResult.addedRows.map { rowData ->
-            rowData.getCurrentAs<Int>("category")
-        } + categoriesResult.modifiedRows.map { rowData ->
-            rowData.getCurrentAs<Int>("category")
-        }
+            val insertedCategories = categoriesResult.addedRows.map { rowData ->
+                rowData.getCurrentAs<Int>("category")
+            } + categoriesResult.modifiedRows.map { rowData ->
+                rowData.getCurrentAs<Int>("category")
+            }
 
-        plan.add(
-            db.insertInto("games.categories_to_games")
-                .fromSelect(db.select("category_id", "@game_id").from("UNNEST(@ids_to_insert) AS category_id").toSql())
+            insertInto("games.categories_to_games")
+                .fromSelect(select("category_id", "@game_id").from("UNNEST(@ids_to_insert) AS category_id").toSql())
                 .asStep().executeUpdate("ids_to_insert" to insertedCategories.withPgType(PgStandardType.INT4_ARRAY), "game_id" to gameIdRef)
-        )
+        }
 
         // Wykonanie całego planu
         return when (val result = dbResult { db.executeTransactionPlan(plan) }) {
@@ -254,32 +248,28 @@ class GameFormDataManager : FormDataManager() {
         data: Map<String, Any?>,
         gameIdRef: TransactionValue<Int>
     ) {
-        if (exists) {
-            if (conditionMet) { // UPDATE
-                val allParams = data + mapOf("game_id" to gameIdRef)
-                plan.add(
-                    db.update(tableName)
+        with(plan) {
+            if (exists) {
+                if (conditionMet) { // UPDATE
+                    val allParams = data + mapOf("game_id" to gameIdRef)
+                    update(tableName)
                         .setValues(data)
                         .where("game_id = @game_id")
                         .asStep()
                         .executeUpdate(allParams)
-                )
-            } else { // DELETE
-                plan.add(
-                    db.deleteFrom(tableName)
+                } else { // DELETE
+                    deleteFrom(tableName)
                         .where("game_id = @game_id")
                         .asStep()
                         .executeUpdate("game_id" to gameIdRef)
-                )
-            }
-        } else if (conditionMet) { // INSERT
-            val allParams = data + mapOf("game_id" to gameIdRef)
-            plan.add(
-                db.insertInto(tableName)
+                }
+            } else if (conditionMet) { // INSERT
+                val allParams = data + mapOf("game_id" to gameIdRef)
+                insertInto(tableName)
                     .values(allParams)
                     .asStep()
                     .executeUpdate(allParams)
-            )
+            }
         }
     }
 }
