@@ -38,13 +38,7 @@ class GameStatisticsHandler(val scope: CoroutineScope) : KoinComponent {
         // --- CTE 2: status_distribution ---
         val statusDistributionQuery = db.select(
             """
-            array_agg(
-                dynamic_dto('game_dashboard_status', jsonb_build_object(
-                    'status', status,
-                    'count', count
-                    )
-                ) ORDER BY count DESC
-            ) AS distribution
+            array_agg(ROW('status', status, 'count', count) ORDER BY count DESC) AS distribution
         """
         )
             .fromSubquery(
@@ -69,11 +63,8 @@ class GameStatisticsHandler(val scope: CoroutineScope) : KoinComponent {
         val mostPlayedGamesQuery = db.select(
             """
             array_agg(
-                dynamic_dto('game_dashboard_time', jsonb_build_object(
-                    'id', g.id,
-                    'name', g.name,
-                    'playTimeHours', pt.play_time_hours)
-                ) ORDER BY pt.play_time_hours DESC
+                ROW('id', g.id, 'name', g.name, 'play_time_hours', pt.play_time_hours)
+                ORDER BY pt.play_time_hours DESC
             ) AS games
         """
         )
@@ -96,11 +87,8 @@ class GameStatisticsHandler(val scope: CoroutineScope) : KoinComponent {
         val highestRatedGamesQuery = db.select(
             """
             array_agg(
-                dynamic_dto('game_dashboard_rating', jsonb_build_object(
-                    'id', r.id,
-                    'name', r.name,
-                    'averageRating', r.avg_rating)
-                ) ORDER BY r.avg_rating DESC, r.rating_count DESC, r.name
+                ROW('id', r.id, 'name', r.name, 'average_rating', r.avg_rating)
+                ORDER BY r.avg_rating DESC, r.rating_count DESC, r.name
             ) AS games
         """
         )

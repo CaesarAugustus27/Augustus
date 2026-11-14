@@ -53,15 +53,7 @@ class BooksHomeHandler(
 
         val currentlyReadingSubquery = db.select(
             """
-            COALESCE(
-                array_agg(
-                    dynamic_dto('books_dashboard_item', jsonb_build_object(
-                        'id', id,
-                        'title', title_pl)
-                    )
-                ), 
-                '{}'::dynamic_dto[]
-            )
+            COALESCE(array_agg(ROW('id', id, 'title', title_pl)), '{}')
         """
         ).fromSubquery(innerCurrentlyReading).toSql()
 
@@ -74,15 +66,7 @@ class BooksHomeHandler(
 
         val recentlyAddedSubquery = db.select(
             """
-            COALESCE(
-                array_agg(
-                    dynamic_dto('books_dashboard_item', jsonb_build_object(
-                        'id', id,
-                        'title', title_pl)
-                    )
-                ), 
-                '{}'::dynamic_dto[]
-            )
+            COALESCE(array_agg(ROW('id', id, 'title', title_pl)), '{}')
         """
         ).fromSubquery(innerRecentlyAdded).toSql()
 

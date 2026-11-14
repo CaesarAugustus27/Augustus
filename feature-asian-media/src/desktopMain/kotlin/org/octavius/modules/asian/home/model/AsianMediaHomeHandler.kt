@@ -65,12 +65,7 @@ class AsianMediaHomeHandler(
             .toSql()
         val currentlyReadingSubquery = db.select(
             """
-            array_agg(
-                dynamic_dto('asian_media_dashboard_item', jsonb_build_object(
-                    'id', id,
-                    'mainTitle', titles[1])
-                )
-            )"""
+            array_agg(ROW('id', id, 'main_title', titles[1]))"""
         ).fromSubquery(innerCurrentlyReading)
             .toSql()
 
@@ -82,12 +77,7 @@ class AsianMediaHomeHandler(
             .toSql()
         val recentlyAddedSubquery = db.select(
             """
-            array_agg(
-                dynamic_dto('asian_media_dashboard_item', jsonb_build_object(
-                    'id', id,
-                    'mainTitle', titles[1])
-                )
-            )"""
+            array_agg(ROW('id', id, 'main_title', titles[1]))"""
         ).fromSubquery(innerRecentlyAdded)
             .toSql()
 

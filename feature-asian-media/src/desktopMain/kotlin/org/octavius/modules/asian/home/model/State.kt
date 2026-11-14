@@ -1,11 +1,5 @@
 package org.octavius.modules.asian.home.model
 
-import kotlinx.serialization.Serializable
-import io.github.octaviusframework.annotation.DynamicallyMappable
-
-
-@DynamicallyMappable("asian_media_dashboard_item")
-@Serializable
 data class DashboardItem(
     val id: Int,
     val mainTitle: String

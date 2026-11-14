@@ -1,17 +1,11 @@
 package org.octavius.feature.books.home.model
 
-import kotlinx.serialization.Serializable
-import io.github.octaviusframework.annotation.DynamicallyMappable
-
-
 sealed interface BooksHomeState {
     data object Loading : BooksHomeState
     data class Success(val data: BooksDashboardData) : BooksHomeState
     data object Error : BooksHomeState
 }
 
-@DynamicallyMappable("books_dashboard_item")
-@Serializable
 data class BookDashboardItem(
     val id: Int,
     val title: String
