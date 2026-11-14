@@ -224,25 +224,25 @@ keeps working.
 builds it, copies it to `%APPDATA%\spicetify\Extensions` and runs `spicetify apply`, which restarts Spotify. The
 extension has to be enabled once with `spicetify config extensions augustus.js`.
 
-The extension's labels and messages are in Polish. "Wrzuć do kosza" (put in the trash) is in the context menu of songs
-and artists, in a button next to the heart in every tracklist row, and in the player bar for the song that is playing.
+The extension's labels and messages are in Spotify's language when it is Polish, and in English otherwise. "Put in the
+trash" is in the context menu of songs and artists, in a button next to the heart in every tracklist row, and in the
+player bar for the song that is playing.
 A song in the trash, or by an artist in the trash, is skipped when it starts and when it goes to the trash while
 playing. Going back to it with the previous button plays it. A run of such songs is skipped in one jump, not one song
 at a time. When only songs from the trash are left until the end of the playlist or album, playback pauses; with
-repeat on, it pauses only when the whole playlist is in the trash. The settings, under "Kosz" (trash) in the profile
-menu, turn the player bar button on and off and show the size of the trash.
+repeat on, it pauses only when the whole playlist is in the trash. The settings, under "Trash" in the profile menu,
+turn the player bar button on and off and show the size of the trash.
 
 The trash itself stays in Spotify's local storage, as bare URIs, because the extension has to skip a song at once, with
 or without the application. The copy in Augustus works like this:
 
 - After every change, and 5 seconds after Spotify starts, the extension sends the whole trash. The application only adds
   to its copy, so losing the local storage, for example by reinstalling Spotify, leaves the copy as it was.
-- Only "Wyjmij z kosza" (take out of the trash) deletes from the copy. A removal made while the application is down
+- Only "Take out of the trash" deletes from the copy. A removal made while the application is down
   waits in local storage and goes out before the next sync.
 - For entries the copy has no description of, the extension asks Spotify, with the same GraphQL queries the client
   uses, and sends the title, album and artists of each song and the name of each artist.
-- "Przywróć z Augustusa" (restore from Augustus) in the settings adds back everything the copy has and local storage
-  lacks.
+- "Restore from Augustus" in the settings adds back everything the copy has and local storage lacks.
 
 The extension also copies Liked Songs. They live on Spotify's servers, so this copy is a mirror: 5 seconds after Spotify
 starts and after every change, made on any device, the extension sends the whole list with the date each song was

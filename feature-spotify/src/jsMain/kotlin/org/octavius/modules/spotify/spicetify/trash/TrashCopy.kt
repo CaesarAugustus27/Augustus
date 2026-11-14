@@ -6,6 +6,7 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.contentOrNull
+import org.octavius.modules.spotify.localization.SpotifyTr
 import org.octavius.modules.spotify.model.Album
 import org.octavius.modules.spotify.model.Artist
 import org.octavius.modules.spotify.model.Track
@@ -77,9 +78,9 @@ object TrashCopy {
         try {
             val copy: TrashUris = AugustusApi.get("/trash")
             val restored = TrashStore.restore(copy, pendingRemovals.toList())
-            Spicetify.showNotification("Przywrócone z Augustusa: $restored")
+            Spicetify.showNotification(SpotifyTr.Copy.restored(restored))
         } catch (e: Throwable) {
-            Spicetify.showNotification("Nie udało się przywrócić - czy Augustus jest uruchomiony?", true)
+            Spicetify.showNotification(SpotifyTr.Copy.restoreFailed(), true)
             console.error(e)
         }
     }
@@ -132,7 +133,7 @@ object TrashCopy {
         val tracks = missingTracks.filter { it !in unavailable }
         val artists = missingArtists.filter { it !in unavailable }
         val long = tracks.size + artists.size >= DESCRIBE_BATCH
-        if (long) Spicetify.showNotification("Do opisania dla Augustusa: ${tracks.size + artists.size}…")
+        if (long) Spicetify.showNotification(SpotifyTr.Copy.describing(tracks.size + artists.size))
         var described = 0
 
         for (batch in tracks.chunked(DESCRIBE_BATCH)) {
@@ -167,7 +168,7 @@ object TrashCopy {
             delay(DESCRIBE_PAUSE_MS)
         }
 
-        if (long) Spicetify.showNotification("Opisy wysłane do Augustusa: $described")
+        if (long) Spicetify.showNotification(SpotifyTr.Copy.described(described))
     }
 
     /** Kształt odpowiedzi taki, jak mapuje go sam klient Spotify (`artists.items[].uri` + `profile.name`, `albumOfTrack`). */

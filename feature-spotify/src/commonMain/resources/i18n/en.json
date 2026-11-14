@@ -1,0 +1,25 @@
+{
+  "trash": {
+    "add": "Put in the trash",
+    "remove": "Take out of the trash",
+    "trackAdded": "Song in the trash, it will be skipped",
+    "artistAdded": "Artist in the trash, their songs will be skipped",
+    "trackRemoved": "Song taken out of the trash",
+    "artistRemoved": "Artist taken out of the trash",
+    "onlyTrashLeft": "Only songs from the trash are left",
+    "saveFailed": "Could not save the trash to local storage"
+  },
+  "copy": {
+    "describing": "To describe for Augustus: {0}…",
+    "described": "Descriptions sent to Augustus: {0}",
+    "restored": "Restored from Augustus: {0}",
+    "restoreFailed": "Could not restore - is Augustus running?"
+  },
+  "settings": {
+    "title": "Trash",
+    "playbarButton": "Trash button in the player bar",
+    "summary": "Songs in the trash: {0}, artists: {1}.",
+    "restore": "Restore from Augustus",
+    "restoreDescription": "Adds everything Augustus has and this trash lacks."
+  }
+}

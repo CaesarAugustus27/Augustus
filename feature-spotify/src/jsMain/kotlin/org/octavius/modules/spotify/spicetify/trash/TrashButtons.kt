@@ -3,6 +3,7 @@ package org.octavius.modules.spotify.spicetify.trash
 import kotlinx.browser.document
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.booleanOrNull
+import org.octavius.modules.spotify.localization.SpotifyTr
 import org.octavius.modules.spotify.spicetify.ClientStorage
 import org.octavius.modules.spotify.spicetify.JsSet
 import org.octavius.modules.spotify.spicetify.Spicetify
@@ -189,7 +190,7 @@ object TrashButtons {
         val trashed = state[0] as Boolean
         val setTrashed = state[1]
         val ref = React.useRef(null)
-        val label = if (trashed) REMOVE_LABEL else ADD_LABEL
+        val label = if (trashed) SpotifyTr.Trash.remove() else SpotifyTr.Trash.add()
 
         React.useEffect({
             val update: (Event) -> Unit = { setTrashed(uri in TrashStore) }

@@ -3,6 +3,7 @@ package org.octavius.modules.spotify.spicetify.trash
 import kotlinx.browser.document
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import org.octavius.modules.spotify.localization.SpotifyTr
 import org.octavius.modules.spotify.model.TrashUris
 import org.octavius.modules.spotify.spicetify.ClientStorage
 import org.octavius.modules.spotify.spicetify.PlayerTrack
@@ -51,15 +52,15 @@ object TrashStore {
     /** Wrzuca do kosza albo wyjmuje; wrzucony grający utwór od razu przeskakuje. */
     fun toggle(uri: String) {
         val set = setFor(uri) ?: return
-        val what = if (set === tracks) "Utwór" else "Wykonawca"
+        val isTrack = set === tracks
 
         if (set.remove(uri)) {
             TrashCopy.queueRemoval(uri)
-            Spicetify.showNotification("$what wyjęty z kosza")
+            Spicetify.showNotification(if (isTrack) SpotifyTr.Trash.trackRemoved() else SpotifyTr.Trash.artistRemoved())
         } else {
             set.add(uri)
             TrashCopy.cancelRemoval(uri)
-            Spicetify.showNotification("$what w koszu, będzie pomijany")
+            Spicetify.showNotification(if (isTrack) SpotifyTr.Trash.trackAdded() else SpotifyTr.Trash.artistAdded())
         }
         store()
         if (uri in set) Skipper.skipIfPlaying(uri)
@@ -83,7 +84,7 @@ object TrashStore {
             ClientStorage.write(TRACKS_KEY, asTrashbinMap(tracks))
             ClientStorage.write(ARTISTS_KEY, asTrashbinMap(artists))
         } catch (e: Throwable) {
-            Spicetify.showNotification("Nie udało się zapisać kosza w LocalStorage", true)
+            Spicetify.showNotification(SpotifyTr.Trash.saveFailed(), true)
             console.error(e)
         }
         document.dispatchEvent(CustomEvent(CHANGE_EVENT))

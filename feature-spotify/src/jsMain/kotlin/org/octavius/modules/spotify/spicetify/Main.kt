@@ -1,5 +1,6 @@
 package org.octavius.modules.spotify.spicetify
 
+import io.github.octaviusframework.i18n.core.OctaviusI18n
 import kotlinx.browser.window
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
@@ -41,6 +42,9 @@ private fun ready(): Boolean {
 }
 
 private fun start() {
+    // Napisy w języku klienta, czytanym raz przy starcie; język bez tłumaczeń dostaje angielskie
+    OctaviusI18n.currentLanguage = Spicetify.Locale?.getLocale()?.substringBefore('-') ?: "en"
+
     Settings.register()
     TrashMenu.register()
     Skipper.listenForBack()

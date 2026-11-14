@@ -1,0 +1,25 @@
+{
+  "trash": {
+    "add": "Wrzuć do kosza",
+    "remove": "Wyjmij z kosza",
+    "trackAdded": "Utwór w koszu, będzie pomijany",
+    "artistAdded": "Wykonawca w koszu, będzie pomijany",
+    "trackRemoved": "Utwór wyjęty z kosza",
+    "artistRemoved": "Wykonawca wyjęty z kosza",
+    "onlyTrashLeft": "Dalej są już tylko utwory z kosza",
+    "saveFailed": "Nie udało się zapisać kosza w LocalStorage"
+  },
+  "copy": {
+    "describing": "Do opisania dla Augustusa: {0}…",
+    "described": "Opisy wysłane do Augustusa: {0}",
+    "restored": "Przywrócone z Augustusa: {0}",
+    "restoreFailed": "Nie udało się przywrócić - czy Augustus jest uruchomiony?"
+  },
+  "settings": {
+    "title": "Kosz",
+    "playbarButton": "Przycisk kosza w pasku odtwarzacza",
+    "summary": "Utworów w koszu: {0}, wykonawców: {1}.",
+    "restore": "Przywróć z Augustusa",
+    "restoreDescription": "Dokłada wszystko, co Augustus ma, a czego brakuje w tym koszu."
+  }
+}

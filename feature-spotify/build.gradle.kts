@@ -1,10 +1,11 @@
 plugins {
+    alias(libs.plugins.octaviusI18n)
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.kotlinSerialization)
 }
 
 kotlin {
-    // API kopii kosza i polubionych, bez ekranów, więc bez Compose i bez tłumaczeń
+    // API kopii kosza i polubionych, bez ekranów, więc bez Compose
     jvm("desktop")
     // Rozszerzenie Spicetify; DTO API dzieli z aplikacją przez commonMain
     js {
@@ -21,6 +22,7 @@ kotlin {
 
         commonMain.dependencies {
             implementation(libs.kotlinx.serialization.json)
+            implementation(libs.octavius.i18n.core)
         }
 
         desktopMain.dependencies {
@@ -34,6 +36,16 @@ kotlin {
 
         jsMain.dependencies {
             implementation(libs.kotlinx.coroutines.core)
+        }
+    }
+}
+
+// Napisy rozszerzenia; język bierze z klienta Spotify
+octaviusI18n {
+    generators {
+        create("spotify") {
+            targetPackage = "org.octavius.modules.spotify.localization"
+            objectName = "SpotifyTr"
         }
     }
 }

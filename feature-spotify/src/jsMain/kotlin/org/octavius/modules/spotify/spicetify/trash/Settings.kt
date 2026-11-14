@@ -2,6 +2,7 @@ package org.octavius.modules.spotify.spicetify.trash
 
 import kotlinx.browser.document
 import kotlinx.coroutines.launch
+import org.octavius.modules.spotify.localization.SpotifyTr
 import org.octavius.modules.spotify.spicetify.Spicetify
 import org.octavius.modules.spotify.spicetify.spicetifyScope
 import org.w3c.dom.HTMLElement
@@ -22,17 +23,17 @@ object Settings {
         .augustus-trashbin button:hover { border-color: var(--spice-text); }
     """
 
-    fun register() = Spicetify.Menu.Item("Kosz", false, { open() }, TRASH_ICON).register()
+    fun register() = Spicetify.Menu.Item(SpotifyTr.Settings.title(), false, { open() }, TRASH_ICON).register()
 
     private fun open() {
         val view = document.createElement("div") as HTMLElement
         view.className = "augustus-trashbin"
         view.innerHTML = """
             <style>$STYLE</style>
-            <label><input type="checkbox" name="widget">Przycisk kosza w pasku odtwarzacza</label>
+            <label><input type="checkbox" name="widget">${SpotifyTr.Settings.playbarButton()}</label>
             <p class="summary"></p>
-            <button type="button" name="restore">Przywróć z Augustusa</button>
-            <p>Dokłada wszystko, co Augustus ma, a czego brakuje w tym koszu.</p>
+            <button type="button" name="restore">${SpotifyTr.Settings.restore()}</button>
+            <p>${SpotifyTr.Settings.restoreDescription()}</p>
         """
 
         val widget = view.querySelector("input[name=\"widget\"]") as HTMLInputElement
@@ -48,9 +49,9 @@ object Settings {
             }
         }
 
-        Spicetify.PopupModal.display(json("title" to "Kosz", "content" to view))
+        Spicetify.PopupModal.display(json("title" to SpotifyTr.Settings.title(), "content" to view))
     }
 
     private fun summaryText() =
-        "Utworów w koszu: ${TrashStore.trackUris.size}, wykonawców: ${TrashStore.artistUris.size}."
+        SpotifyTr.Settings.summary(TrashStore.trackUris.size, TrashStore.artistUris.size)
 }

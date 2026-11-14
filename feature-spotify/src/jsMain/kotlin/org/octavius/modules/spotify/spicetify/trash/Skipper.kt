@@ -4,6 +4,7 @@ import kotlinx.browser.document
 import kotlinx.browser.window
 import kotlinx.coroutines.await
 import kotlinx.coroutines.launch
+import org.octavius.modules.spotify.localization.SpotifyTr
 import org.octavius.modules.spotify.spicetify.PlayerTrack
 import org.octavius.modules.spotify.spicetify.Queue
 import org.octavius.modules.spotify.spicetify.QueueUpdate
@@ -152,6 +153,6 @@ object Skipper {
     private fun stopPlayback() {
         passed.clear()
         Spicetify.Player.pause()
-        Spicetify.showNotification("Dalej są już tylko utwory z kosza")
+        Spicetify.showNotification(SpotifyTr.Trash.onlyTrashLeft())
     }
 }

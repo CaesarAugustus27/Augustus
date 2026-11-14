@@ -12,6 +12,7 @@ external object Spicetify {
     val GraphQL: SpicetifyGraphQL?
     val PopupModal: SpicetifyPopupModal
     val Platform: SpicetifyPlatform
+    val Locale: SpicetifyLocale?
     val React: dynamic
     val ReactDOM: dynamic
 
@@ -108,6 +109,11 @@ external interface SpicetifyGraphQL {
 external interface SpicetifyPopupModal {
     /** `{title, content}`, gdzie `content` to element DOM. */
     fun display(options: dynamic)
+}
+
+external interface SpicetifyLocale {
+    /** Język klienta, np. `pl`, `en`, `pt-BR`. */
+    fun getLocale(): String
 }
 
 external interface SpicetifyPlatform {
