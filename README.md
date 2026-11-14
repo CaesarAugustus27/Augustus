@@ -81,7 +81,7 @@ Augustus/
 ├── feature-books/
 ├── feature-games/
 ├── feature-sandbox/
-├── feature-spotify/         # Trash copy API and its Spicetify extension (spicetify/)
+├── feature-spotify/         # Trash copy API and its Spicetify extension (jsMain)
 ├── feature-contract/        # FeatureModule and ApiModule interfaces
 │
 ├── api-server/              # Embedded Ktor server for the extension
@@ -211,8 +211,9 @@ and `jsMain` holds the page parsers. The routes are defined in `AsianMediaApi` a
 
 ## Spotify Trashbin
 
-`feature-spotify/spicetify/trashbin.js` is a Spicetify extension that skips the songs and artists you put in its trash
-and keeps a copy of the trash in Augustus. The idea, the storage keys and the storage format come from Spicetify's
+`trashbin.js` is a Spicetify extension that skips the songs and artists you put in its trash and keeps a copy of the
+trash in Augustus. It is written in Kotlin/JS, in `feature-spotify/src/jsMain`, and shares the API's data classes with
+the application. The idea, the storage keys and the storage format come from Spicetify's
 [Trashbin](https://github.com/spicetify/cli/blob/main/Extensions/trashbin.js), so a trash that Trashbin left behind
 keeps working.
 
@@ -220,8 +221,8 @@ keeps working.
 ./gradlew :feature-spotify:installTrashbin
 ```
 
-copies it to `%APPDATA%\spicetify\Extensions` and runs `spicetify apply`, which restarts Spotify. The extension has to be
-enabled once with `spicetify config extensions trashbin.js`.
+builds it, copies it to `%APPDATA%\spicetify\Extensions` and runs `spicetify apply`, which restarts Spotify. The
+extension has to be enabled once with `spicetify config extensions trashbin.js`.
 
 The extension's labels and messages are in Polish. "Wrzuć do kosza" (put in the trash) is in the context menu of songs
 and artists, in a button next to the heart in every tracklist row, and in the player bar for the song that is playing.
