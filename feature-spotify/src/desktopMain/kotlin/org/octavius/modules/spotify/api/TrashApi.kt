@@ -20,11 +20,11 @@ import org.octavius.modules.spotify.model.TrashSyncResponse
 import org.octavius.modules.spotify.model.TrashUris
 
 /**
- * Endpointy dla Trashbina. Kosz jest kopią zapasową LocalStorage klienta Spotify, więc synchronizacja tylko
+ * Endpointy kopii kosza. Kosz jest kopią zapasową LocalStorage klienta Spotify, więc synchronizacja tylko
  * dopisuje: wyczyszczony LocalStorage (np. reinstalacja Spotify) nie może wyczyścić kopii. Wpis znika tylko
- * przez jawne wyjęcie z kosza. LocalStorage zna same URI, opisy dosyła Trashbin do tych, których baza nie ma.
+ * przez jawne wyjęcie z kosza. LocalStorage zna same URI, opisy dosyła rozszerzenie do tych, których baza nie ma.
  */
-class TrashbinApi : ApiModule, KoinComponent {
+class TrashApi : ApiModule, KoinComponent {
     private val db: OctaviusClient by inject()
 
     override fun installRoutes(routing: Routing) {
@@ -68,8 +68,8 @@ class TrashbinApi : ApiModule, KoinComponent {
 
     /**
      * Definiuje endpoint: POST /api/spotify/trash/describe
-     * Zapisuje opisy utworów (tytuł, album, wykonawcy) i nazwy wykonawców z kosza. Opis wpisu, którego w koszu już
-     * nie ma, przepada.
+     * Zapisuje opisy utworów (tytuł, album, wykonawcy) i nazwy wykonawców z kosza. Opis wpisu, którego nie ma już ani
+     * w koszu, ani w polubionych, przepada.
      */
     private fun Route.describe() {
         post("/describe") {
@@ -82,8 +82,8 @@ class TrashbinApi : ApiModule, KoinComponent {
 
     /**
      * Definiuje endpoint: POST /api/spotify/trash/remove
-     * Usuwa wyjęte utwory, wykonawców wyjmuje z kosza i sprząta wykonawców i albumy, do których nic już nie
-     * prowadzi.
+     * Wyjmuje utwory i wykonawców z kosza i sprząta utwory, wykonawców i albumy, do których nic już nie prowadzi.
+     * Utwór z polubionych zostaje.
      */
     private fun Route.remove() {
         post("/remove") {
@@ -93,7 +93,7 @@ class TrashbinApi : ApiModule, KoinComponent {
                     .executeUpdate("uris" to uris).getOrElse { return@transactionResult it }
                 val artists = rawQuery(UNTRASH_ARTISTS).asResult()
                     .executeUpdate("uris" to uris).getOrElse { return@transactionResult it }
-                rawQuery(DROP_ORPHANS).asResult().executeUpdate().getOrElse { return@transactionResult it }
+                SpotifyCatalog.dropOrphans().getOrElse { return@transactionResult it }
                 DataResult.Success((tracks + artists).toInt())
             }
             when (result) {
@@ -103,51 +103,24 @@ class TrashbinApi : ApiModule, KoinComponent {
         }
     }
 
-    private fun describe(descriptions: TrashDescriptions): DataResult<Int> {
-        val tracks = descriptions.tracks
-        val albums = tracks.mapNotNull { it.album }.distinctBy { it.uri }
-        val credited = tracks.flatMap { it.artists }.distinctBy { it.uri }
-        val credits = tracks.flatMap { track -> track.artists.mapIndexed { position, artist -> Triple(track.uri, position, artist.uri) } }
-        val trackUris = tracks.map { it.uri }.withPgType(PgStandardType.TEXT_ARRAY)
-
-        // Najpierw albumy i wykonawcy, bo utwory i ich wykonawcy się do nich odwołują
-        return db.transactionResult {
-            rawQuery(UPSERT_ALBUMS).asResult().executeUpdate(
-                "uris" to albums.map { it.uri }.withPgType(PgStandardType.TEXT_ARRAY),
-                "names" to albums.map { it.name }.withPgType(PgStandardType.TEXT_ARRAY)
-            ).getOrElse { return@transactionResult it }
-            rawQuery(UPSERT_ARTISTS).asResult().executeUpdate(
-                "uris" to credited.map { it.uri }.withPgType(PgStandardType.TEXT_ARRAY),
-                "names" to credited.map { it.name }.withPgType(PgStandardType.TEXT_ARRAY)
-            ).getOrElse { return@transactionResult it }
-            val described = rawQuery(DESCRIBE_TRACKS).asResult().executeUpdate(
-                "uris" to trackUris,
-                "titles" to tracks.map { it.title }.withPgType(PgStandardType.TEXT_ARRAY),
-                "albums" to tracks.map { it.album?.uri }.withPgType(PgStandardType.TEXT_ARRAY)
-            ).getOrElse { return@transactionResult it }
-            rawQuery("DELETE FROM spotify.track_artists WHERE track_uri = ANY(@uris)").asResult()
-                .executeUpdate("uris" to trackUris).getOrElse { return@transactionResult it }
-            rawQuery(INSERT_CREDITS).asResult().executeUpdate(
-                "tracks" to credits.map { it.first }.withPgType(PgStandardType.TEXT_ARRAY),
-                "positions" to credits.map { it.second }.withPgType(PgStandardType.INT4_ARRAY),
-                "artists" to credits.map { it.third }.withPgType(PgStandardType.TEXT_ARRAY)
-            ).getOrElse { return@transactionResult it }
+    private fun describe(descriptions: TrashDescriptions): DataResult<Int> =
+        db.transactionResult {
+            val described = SpotifyCatalog.describe(descriptions.tracks).getOrElse { return@transactionResult it }
             val named = rawQuery(NAME_ARTISTS).asResult().executeUpdate(
                 "uris" to descriptions.artists.map { it.uri }.withPgType(PgStandardType.TEXT_ARRAY),
                 "names" to descriptions.artists.map { it.name }.withPgType(PgStandardType.TEXT_ARRAY)
             ).getOrElse { return@transactionResult it }
-            DataResult.Success((described + named).toInt())
+            DataResult.Success(described + named.toInt())
         }
-    }
 
     private suspend fun RoutingContext.respondFailure(result: DataResult.Failure) =
         call.respond(HttpStatusCode.InternalServerError, "Błąd bazy: ${result.error.message}")
 }
 
 /**
- * Dopisuje utwory i wykonawców z kosza (wykonawca znany już z utworu dostaje tylko `trashed_at`) i odsyła URI bez
- * opisu. Główne zapytanie widzi tabele sprzed wstawienia, więc nowy wpis wychodzi jako brak przez LEFT JOIN, tak
- * samo jak stary bez opisu.
+ * Dopisuje utwory i wykonawców z kosza (utwór i wykonawca znani już z polubionych dostają tylko wpis w koszu) i
+ * odsyła URI bez opisu. Główne zapytanie widzi tabele sprzed wstawienia, więc nowy wpis wychodzi jako brak przez LEFT
+ * JOIN, tak samo jak stary bez opisu.
  */
 private const val SYNC_SQL = """
 WITH incoming_tracks AS (
@@ -155,6 +128,11 @@ WITH incoming_tracks AS (
 ),
      incoming_artists AS (
          SELECT uri FROM UNNEST(@artists) AS a(uri)
+     ),
+     known_tracks AS (
+         INSERT INTO spotify.tracks (uri)
+             SELECT uri FROM incoming_tracks
+             ON CONFLICT (uri) DO NOTHING
      ),
      added_tracks AS (
          INSERT INTO spotify.trashed_tracks (uri)
@@ -171,40 +149,12 @@ WITH incoming_tracks AS (
 SELECT ((SELECT count(*) FROM added_tracks) + (SELECT count(*) FROM added_artists))::int AS added,
        ARRAY(SELECT i.uri
              FROM incoming_tracks i
-                      LEFT JOIN spotify.trashed_tracks t ON t.uri = i.uri
+                      LEFT JOIN spotify.tracks t ON t.uri = i.uri
              WHERE t.title IS NULL)                                                  AS missing_tracks,
        ARRAY(SELECT i.uri
              FROM incoming_artists i
                       LEFT JOIN spotify.artists a ON a.uri = i.uri
              WHERE a.name IS NULL)                                                   AS missing_artists
-"""
-
-private const val UPSERT_ALBUMS = """
-INSERT INTO spotify.albums (uri, name)
-SELECT uri, name FROM UNNEST(@uris, @names) AS t(uri, name)
-ON CONFLICT (uri) DO UPDATE SET name = EXCLUDED.name WHERE albums.name IS DISTINCT FROM EXCLUDED.name
-"""
-
-/** Wykonawcy z opisów utworów; nowy nie trafia do kosza, istniejącemu zmienia się tylko nazwa. */
-private const val UPSERT_ARTISTS = """
-INSERT INTO spotify.artists (uri, name)
-SELECT uri, name FROM UNNEST(@uris, @names) AS t(uri, name)
-ON CONFLICT (uri) DO UPDATE SET name = EXCLUDED.name WHERE artists.name IS DISTINCT FROM EXCLUDED.name
-"""
-
-private const val DESCRIBE_TRACKS = """
-UPDATE spotify.trashed_tracks t
-SET title = i.title, album_uri = i.album_uri
-FROM UNNEST(@uris, @titles, @albums) AS i(uri, title, album_uri)
-WHERE t.uri = i.uri
-"""
-
-/** Złączenie z koszem pomija utwór wyjęty, zanim opis doszedł. */
-private const val INSERT_CREDITS = """
-INSERT INTO spotify.track_artists (track_uri, position, artist_uri)
-SELECT c.track_uri, c.position, c.artist_uri
-FROM UNNEST(@tracks, @positions, @artists) AS c(track_uri, position, artist_uri)
-         JOIN spotify.trashed_tracks t ON t.uri = c.track_uri
 """
 
 /** Nazwy wykonawców z kosza; tylko istniejącym, żeby opis wyjętego wykonawcy niczego nie dopisał. */
@@ -218,15 +168,4 @@ WHERE a.uri = i.uri
 
 private const val UNTRASH_ARTISTS = """
 UPDATE spotify.artists SET trashed_at = NULL WHERE uri = ANY(@uris) AND trashed_at IS NOT NULL
-"""
-
-/** Wykonawcy spoza kosza bez żadnego utworu i albumy bez utworów. */
-private const val DROP_ORPHANS = """
-WITH orphan_artists AS (
-    DELETE FROM spotify.artists a
-        WHERE a.trashed_at IS NULL
-            AND NOT EXISTS (SELECT 1 FROM spotify.track_artists ta WHERE ta.artist_uri = a.uri)
-)
-DELETE FROM spotify.albums al
-WHERE NOT EXISTS (SELECT 1 FROM spotify.trashed_tracks t WHERE t.album_uri = al.uri)
 """

@@ -1,5 +1,7 @@
-package org.octavius.modules.spotify.trashbin
+package org.octavius.modules.spotify.spicetify.trash
 
+import org.octavius.modules.spotify.spicetify.JsSet
+import org.octavius.modules.spotify.spicetify.objectKeys
 import org.w3c.dom.Element
 
 /** URI utworu w wierszu tracklisty. DOM go nie zawiera, więc wyciągamy go z danych Reacta podpiętych pod elementy wiersza. */

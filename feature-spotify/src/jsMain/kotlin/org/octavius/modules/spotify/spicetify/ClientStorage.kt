@@ -1,4 +1,4 @@
-package org.octavius.modules.spotify.trashbin
+package org.octavius.modules.spotify.spicetify
 
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement

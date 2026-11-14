@@ -4,13 +4,13 @@ plugins {
 }
 
 kotlin {
-    // API kopii kosza, bez ekranów, więc bez Compose i bez tłumaczeń
+    // API kopii kosza i polubionych, bez ekranów, więc bez Compose i bez tłumaczeń
     jvm("desktop")
     // Rozszerzenie Spicetify; DTO API dzieli z aplikacją przez commonMain
     js {
         browser {
             commonWebpackConfig {
-                outputFileName = "trashbin.js"
+                outputFileName = "augustus.js"
             }
         }
         binaries.executable()
@@ -38,19 +38,19 @@ kotlin {
     }
 }
 
-// Trashbin -> katalog rozszerzeń Spicetify (%APPDATA%\spicetify\Extensions), potem `spicetify apply`, które
-// restartuje Spotify. Rozszerzenie musi być włączone w Spicetify: `spicetify config extensions trashbin.js`.
-val copyTrashbin by tasks.registering(Copy::class) {
+// augustus.js -> katalog rozszerzeń Spicetify (%APPDATA%\spicetify\Extensions), potem `spicetify apply`, które
+// restartuje Spotify. Rozszerzenie musi być włączone w Spicetify: `spicetify config extensions augustus.js`.
+val copySpicetifyExtension by tasks.registering(Copy::class) {
     from(tasks.named("jsBrowserProductionWebpack")) {
-        include("trashbin.js")
+        include("augustus.js")
     }
     into(providers.environmentVariable("APPDATA").map { "$it/spicetify/Extensions" })
 }
 
-tasks.register<Exec>("installTrashbin") {
+tasks.register<Exec>("installSpicetifyExtension") {
     group = "Augustus Extension"
-    description = "Builds trashbin.js, copies it to Spicetify's extensions and runs spicetify apply"
+    description = "Builds augustus.js, copies it to Spicetify's extensions and runs spicetify apply"
 
-    dependsOn(copyTrashbin)
+    dependsOn(copySpicetifyExtension)
     commandLine("spicetify", "apply")
 }

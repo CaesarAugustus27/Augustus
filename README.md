@@ -24,11 +24,11 @@ of media is a feature module with its own tab, database schema, forms and report
 | `feature-games`       | Games, with series, categories, play time and ratings           |
 | `feature-books`       | Books and authors                                               |
 | `feature-sandbox`     | Every form control and report column, with no tables of its own |
-| `feature-spotify`     | A copy of the trash of its Spotify extension, with no tab       |
+| `feature-spotify`     | Copies of the Spotify trash and Liked Songs, with no tab        |
 
 A [browser extension](#browser-extension) adds series from NovelUpdates and MangaUpdates, and repeats in the catalogue
-what you do on NovelUpdates and SteamDB. A [Spicetify extension](#spotify-trashbin) skips the songs and artists you never
-want Spotify to play, and keeps a copy of them.
+what you do on NovelUpdates and SteamDB. A [Spicetify extension](#spotify-extension) skips the songs and artists you never
+want Spotify to play, and keeps a copy of them and of your Liked Songs.
 
 The application is built on these parts:
 
@@ -209,20 +209,20 @@ and `jsMain` holds the page parsers. The routes are defined in `AsianMediaApi` a
 | `POST /api/asian-media/novelupdates/list-move` | background | Repeats a reading list move                  |
 | `POST /api/games/steam/ignore`                 | background | Repeats an ignored game                      |
 
-## Spotify Trashbin
+## Spotify extension
 
-`trashbin.js` is a Spicetify extension that skips the songs and artists you put in its trash and keeps a copy of the
-trash in Augustus. It is written in Kotlin/JS, in `feature-spotify/src/jsMain`, and shares the API's data classes with
-the application. The idea, the storage keys and the storage format come from Spicetify's
+`augustus.js` is a Spicetify extension that skips the songs and artists you put in its trash and keeps copies of the
+trash and of your Liked Songs in Augustus. It is written in Kotlin/JS, in `feature-spotify/src/jsMain`, and shares the
+API's data classes with the application. The trash's idea, storage keys and storage format come from Spicetify's
 [Trashbin](https://github.com/spicetify/cli/blob/main/Extensions/trashbin.js), so a trash that Trashbin left behind
 keeps working.
 
 ```bash
-./gradlew :feature-spotify:installTrashbin
+./gradlew :feature-spotify:installSpicetifyExtension
 ```
 
 builds it, copies it to `%APPDATA%\spicetify\Extensions` and runs `spicetify apply`, which restarts Spotify. The
-extension has to be enabled once with `spicetify config extensions trashbin.js`.
+extension has to be enabled once with `spicetify config extensions augustus.js`.
 
 The extension's labels and messages are in Polish. "Wrzuć do kosza" (put in the trash) is in the context menu of songs
 and artists, in a button next to the heart in every tracklist row, and in the player bar for the song that is playing.
@@ -244,9 +244,15 @@ or without the application. The copy in Augustus works like this:
 - "Przywróć z Augustusa" (restore from Augustus) in the settings adds back everything the copy has and local storage
   lacks.
 
+The extension also copies Liked Songs. They live on Spotify's servers, so this copy is a mirror: 5 seconds after Spotify
+starts and after every change, made on any device, the extension sends the whole list with the date each song was
+liked and its title, album and artists. The application adds the new songs and deletes the ones you unliked. Local
+files are left out.
+
 | Route                              | Effect                                                       |
 |------------------------------------|--------------------------------------------------------------|
 | `GET /api/spotify/trash`           | URIs of everything in the trash                              |
 | `POST /api/spotify/trash/sync`     | Adds missing entries, returns the URIs without a description |
 | `POST /api/spotify/trash/describe` | Saves titles, albums and artists                             |
 | `POST /api/spotify/trash/remove`   | Removes entries taken out of the trash                       |
+| `POST /api/spotify/liked/sync`     | Mirrors Liked Songs                                          |

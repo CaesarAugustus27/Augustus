@@ -1,9 +1,13 @@
-package org.octavius.modules.spotify.trashbin
+package org.octavius.modules.spotify.spicetify.trash
 
 import kotlinx.browser.document
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import org.octavius.modules.spotify.model.TrashUris
+import org.octavius.modules.spotify.spicetify.ClientStorage
+import org.octavius.modules.spotify.spicetify.PlayerTrack
+import org.octavius.modules.spotify.spicetify.Spicetify
+import org.octavius.modules.spotify.spicetify.artistUris
 import org.w3c.dom.CustomEvent
 
 /**
@@ -50,11 +54,11 @@ object TrashStore {
         val what = if (set === tracks) "Utwór" else "Wykonawca"
 
         if (set.remove(uri)) {
-            AugustusCopy.queueRemoval(uri)
+            TrashCopy.queueRemoval(uri)
             Spicetify.showNotification("$what wyjęty z kosza")
         } else {
             set.add(uri)
-            AugustusCopy.cancelRemoval(uri)
+            TrashCopy.cancelRemoval(uri)
             Spicetify.showNotification("$what w koszu, będzie pomijany")
         }
         store()
@@ -79,11 +83,11 @@ object TrashStore {
             ClientStorage.write(TRACKS_KEY, asTrashbinMap(tracks))
             ClientStorage.write(ARTISTS_KEY, asTrashbinMap(artists))
         } catch (e: Throwable) {
-            Spicetify.showNotification("Trashbin: nie udało się zapisać kosza w LocalStorage", true)
+            Spicetify.showNotification("Nie udało się zapisać kosza w LocalStorage", true)
             console.error(e)
         }
         document.dispatchEvent(CustomEvent(CHANGE_EVENT))
-        AugustusCopy.sync()
+        TrashCopy.sync()
     }
 
     private fun asTrashbinMap(uris: Set<String>) = JsonObject(uris.associateWith { JsonPrimitive(true) })

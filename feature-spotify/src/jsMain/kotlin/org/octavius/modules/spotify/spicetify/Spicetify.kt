@@ -1,9 +1,9 @@
-package org.octavius.modules.spotify.trashbin
+package org.octavius.modules.spotify.spicetify
 
 import kotlin.js.Promise
 
 /**
- * Część globalnego `Spicetify`, której używa Trashbin. Odtwarzacz, kolejka i zapytania GraphQL to nieudokumentowane
+ * Część globalnego `Spicetify`, której używa rozszerzenie. Odtwarzacz, kolejka i zapytania GraphQL to nieudokumentowane
  * API klienta Spotify; kształty są takie, jakie zwraca klient.
  */
 external object Spicetify {
@@ -11,6 +11,7 @@ external object Spicetify {
     val LocalStorage: SpicetifyLocalStorage
     val GraphQL: SpicetifyGraphQL?
     val PopupModal: SpicetifyPopupModal
+    val Platform: SpicetifyPlatform
     val React: dynamic
     val ReactDOM: dynamic
 
@@ -109,6 +110,22 @@ external interface SpicetifyPopupModal {
     fun display(options: dynamic)
 }
 
+external interface SpicetifyPlatform {
+    val LibraryAPI: LibraryApi
+}
+
+/** Biblioteka klienta. Polubione to w niej playlista, więc rozszerzenie sięga do jej prywatnych pól. */
+external interface LibraryApi {
+    /** URI playlisty „Polubione utwory”. */
+    val _likedSongsUri: String
+    val _playlistDataClient: PlaylistDataClient
+}
+
+external interface PlaylistDataClient {
+    /** Odpowiada od razu i po każdej zmianie playlisty, także zrobionej na innym urządzeniu. */
+    fun subscribe(request: dynamic, callback: (response: dynamic) -> Unit): dynamic
+}
+
 /** Zbiór z JS-a. Porównuje obiekty po tożsamości i nic do nich nie dopisuje, w przeciwieństwie do `HashSet`. */
 @JsName("Set")
 external class JsSet<T> {
@@ -129,3 +146,6 @@ fun PlayerTrack.artistUris(): List<String> {
 fun PlayerTrack.key(): String = uid?.takeIf { it.isNotEmpty() } ?: uri
 
 fun objectKeys(value: dynamic): Array<String> = js("Object").keys(value).unsafeCast<Array<String>>()
+
+/** Niepusty napis albo `null`. */
+fun textOf(value: dynamic): String? = (value as? String)?.takeIf { it.isNotEmpty() }

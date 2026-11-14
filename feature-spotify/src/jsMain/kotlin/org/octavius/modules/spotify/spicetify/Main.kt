@@ -1,4 +1,4 @@
-package org.octavius.modules.spotify.trashbin
+package org.octavius.modules.spotify.spicetify
 
 import kotlinx.browser.window
 import kotlinx.coroutines.CoroutineExceptionHandler
@@ -7,20 +7,29 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import org.octavius.modules.spotify.spicetify.liked.LikedCopy
+import org.octavius.modules.spotify.spicetify.trash.Settings
+import org.octavius.modules.spotify.spicetify.trash.Skipper
+import org.octavius.modules.spotify.spicetify.trash.TrashButtons
+import org.octavius.modules.spotify.spicetify.trash.TrashCopy
+import org.octavius.modules.spotify.spicetify.trash.TrashMenu
 
 /**
  * Korutyny rozszerzenia. `Unconfined`, bo tak działa `async` w JS: korutyna biegnie od razu do pierwszego zawieszenia
  * i wraca w callbacku obietnicy albo timera. Pomijanie na tym polega, bo numer skoku musi wzrosnąć przy samym
  * `songchange`.
  */
-val trashbinScope = CoroutineScope(SupervisorJob() + Dispatchers.Unconfined + CoroutineExceptionHandler { _, e -> console.error(e) })
+val spicetifyScope = CoroutineScope(SupervisorJob() + Dispatchers.Unconfined + CoroutineExceptionHandler { _, e -> console.error(e) })
 
 /** Spicetify wystawia swoje API dopiero po załadowaniu klienta. */
-private val REQUIRED_API = listOf("LocalStorage", "React", "ReactDOM", "ContextMenu", "Menu", "PopupModal")
+private val REQUIRED_API = listOf("LocalStorage", "React", "ReactDOM", "ContextMenu", "Menu", "PopupModal", "Platform")
 
-/** Rozszerzenie Spicetify „Trashbin”: kosz na utwory i wykonawców, których Spotify ma nie grać, z kopią w Augustusie. */
+/**
+ * Rozszerzenie Spicetify Augustusa (augustus.js): kosz na utwory i wykonawców, których Spotify ma nie grać, oraz
+ * kopie kosza i polubionych w Augustusie.
+ */
 fun main() {
-    trashbinScope.launch {
+    spicetifyScope.launch {
         while (!ready()) delay(500)
         start()
     }
@@ -40,7 +49,10 @@ private fun start() {
     onSongChange()
 
     // Synchronizacja z opóźnieniem, żeby nie spowalniać ładowania Spotify (opisy idą zapytaniami GraphQL)
-    window.setTimeout({ AugustusCopy.sync() }, 5000)
+    window.setTimeout({
+        TrashCopy.sync()
+        LikedCopy.start()
+    }, 5000)
 }
 
 private fun onSongChange() {

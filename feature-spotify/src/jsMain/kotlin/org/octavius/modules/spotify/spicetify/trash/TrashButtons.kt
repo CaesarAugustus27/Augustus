@@ -1,8 +1,11 @@
-package org.octavius.modules.spotify.trashbin
+package org.octavius.modules.spotify.spicetify.trash
 
 import kotlinx.browser.document
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.booleanOrNull
+import org.octavius.modules.spotify.spicetify.ClientStorage
+import org.octavius.modules.spotify.spicetify.JsSet
+import org.octavius.modules.spotify.spicetify.Spicetify
 import org.w3c.dom.Element
 import org.w3c.dom.HTMLElement
 import org.w3c.dom.MutationObserver

@@ -1,4 +1,4 @@
-package org.octavius.modules.spotify.trashbin
+package org.octavius.modules.spotify.spicetify.trash
 
 const val ADD_LABEL = "Wrzuć do kosza"
 const val REMOVE_LABEL = "Wyjmij z kosza"

@@ -1,4 +1,6 @@
-package org.octavius.modules.spotify.trashbin
+package org.octavius.modules.spotify.spicetify.trash
+
+import org.octavius.modules.spotify.spicetify.Spicetify
 
 /** Pozycja menu kontekstowego tylko dla jednego utworu albo wykonawcy, z napisem zależnym od tego, czy już jest w koszu. */
 object TrashMenu {

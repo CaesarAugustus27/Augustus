@@ -3,11 +3,12 @@ package org.octavius.modules.spotify
 import org.octavius.contract.ApiModule
 import org.octavius.contract.FeatureModule
 import org.octavius.contract.ScreenFactory
-import org.octavius.modules.spotify.api.TrashbinApi
+import org.octavius.modules.spotify.api.LikedApi
+import org.octavius.modules.spotify.api.TrashApi
 import org.octavius.navigation.Tab
 
 /**
- * Kosz ze Spicetify. Bez zakładki: trashbin.js wysyła kosz sam, a dane są w schemacie
+ * Kosz i polubione ze Spotify. Bez zakładki: rozszerzenie Spicetify (augustus.js) wysyła je samo, a dane są w schemacie
  * `spotify`.
  */
 object SpotifyFeature : FeatureModule {
@@ -15,6 +16,6 @@ object SpotifyFeature : FeatureModule {
     override val order: Int = 40
     override val schema: String = "spotify"
     override fun getTab(): Tab? = null
-    override fun getApiModules(): List<ApiModule> = listOf(TrashbinApi())
+    override fun getApiModules(): List<ApiModule> = listOf(TrashApi(), LikedApi())
     override fun getScreenFactories(): List<ScreenFactory>? = null
 }

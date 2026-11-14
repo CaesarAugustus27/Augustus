@@ -1,9 +1,16 @@
-package org.octavius.modules.spotify.trashbin
+package org.octavius.modules.spotify.spicetify.trash
 
 import kotlinx.browser.document
 import kotlinx.browser.window
 import kotlinx.coroutines.await
 import kotlinx.coroutines.launch
+import org.octavius.modules.spotify.spicetify.PlayerTrack
+import org.octavius.modules.spotify.spicetify.Queue
+import org.octavius.modules.spotify.spicetify.QueueUpdate
+import org.octavius.modules.spotify.spicetify.Spicetify
+import org.octavius.modules.spotify.spicetify.artistUris
+import org.octavius.modules.spotify.spicetify.key
+import org.octavius.modules.spotify.spicetify.spicetifyScope
 import org.w3c.dom.Element
 import org.w3c.dom.events.Event
 import kotlin.coroutines.resume
@@ -61,13 +68,13 @@ object Skipper {
             passed.clear()
             return
         }
-        trashbinScope.launch { skipTrashed(item, newContext) }
+        spicetifyScope.launch { skipTrashed(item, newContext) }
     }
 
     /** Przeskakuje grający utwór, jeśli to [uri] albo utwór wykonawcy [uri]. */
     fun skipIfPlaying(uri: String) {
         val item = Spicetify.Player.data?.item ?: return
-        if (item.uri == uri || uri in item.artistUris()) trashbinScope.launch { skipTrashed(item, false) }
+        if (item.uri == uri || uri in item.artistUris()) spicetifyScope.launch { skipTrashed(item, false) }
     }
 
     private suspend fun skipTrashed(item: PlayerTrack, newContext: Boolean) {

@@ -38,7 +38,7 @@ data class Track(
     val artists: List<Artist>
 )
 
-/** Opisy dosyłane przez Trashbina: utwory z kosza i nazwy wykonawców wrzuconych do kosza. */
+/** Opisy dosyłane przez rozszerzenie: utwory z kosza i nazwy wykonawców wrzuconych do kosza. */
 @Serializable
 data class TrashDescriptions(
     val tracks: List<Track>,

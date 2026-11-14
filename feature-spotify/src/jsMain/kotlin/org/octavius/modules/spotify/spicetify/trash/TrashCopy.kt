@@ -1,10 +1,8 @@
-package org.octavius.modules.spotify.trashbin
+package org.octavius.modules.spotify.spicetify.trash
 
-import kotlinx.browser.window
 import kotlinx.coroutines.await
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.contentOrNull
@@ -17,7 +15,11 @@ import org.octavius.modules.spotify.model.TrashRemoveRequest
 import org.octavius.modules.spotify.model.TrashRemoveResponse
 import org.octavius.modules.spotify.model.TrashSyncResponse
 import org.octavius.modules.spotify.model.TrashUris
-import org.w3c.fetch.RequestInit
+import org.octavius.modules.spotify.spicetify.AugustusApi
+import org.octavius.modules.spotify.spicetify.ClientStorage
+import org.octavius.modules.spotify.spicetify.Spicetify
+import org.octavius.modules.spotify.spicetify.spicetifyScope
+import org.octavius.modules.spotify.spicetify.textOf
 import kotlin.js.json
 
 /**
@@ -32,8 +34,7 @@ import kotlin.js.json
  * Pobieramy je tymi samymi zapytaniami GraphQL, których używa sam Spotify: `decorateContextTracks` (lista URI utworów)
  * i `getArtistNameAndTracks` (URI wykonawcy).
  */
-object AugustusCopy {
-    private const val URL = "http://127.0.0.1:8080/api/spotify/trash"
+object TrashCopy {
     private const val PENDING_REMOVALS_KEY = "TrashbinAugustusRemovals"
     private const val DESCRIBE_BATCH = 50
 
@@ -53,18 +54,18 @@ object AugustusCopy {
             return
         }
         syncing = true
-        trashbinScope.launch {
+        spicetifyScope.launch {
             try {
                 do {
                     syncAgain = false
                     flushRemovals()
                     val result: TrashSyncResponse =
-                        post("/sync", TrashUris(TrashStore.trackUris.toList(), TrashStore.artistUris.toList()))
-                    if (result.added > 0) console.log("Trashbin: nowe pozycje w Augustusie: ${result.added}")
+                        AugustusApi.post("/trash/sync", TrashUris(TrashStore.trackUris.toList(), TrashStore.artistUris.toList()))
+                    if (result.added > 0) console.log("Augustus: nowe pozycje w kopii kosza: ${result.added}")
                     describe(result.missingTracks, result.missingArtists)
                 } while (syncAgain)
             } catch (e: Throwable) {
-                console.warn("Trashbin: Augustus nie odpowiada, kopia dogoni kosz przy następnej zmianie albo starcie", e)
+                console.warn("Augustus: aplikacja nie odpowiada, kopia dogoni kosz przy następnej zmianie albo starcie", e)
             } finally {
                 syncing = false
             }
@@ -74,10 +75,8 @@ object AugustusCopy {
     /** Dokłada z Augustusa to, czego brakuje w LocalStorage, i pomija wyjęte, które jeszcze tam nie doszły. */
     suspend fun restore() {
         try {
-            val response = window.fetch(URL).await()
-            val text = response.text().await()
-            if (!response.ok) throw IllegalStateException("${response.status} $text")
-            val restored = TrashStore.restore(Json.decodeFromString<TrashUris>(text), pendingRemovals.toList())
+            val copy: TrashUris = AugustusApi.get("/trash")
+            val restored = TrashStore.restore(copy, pendingRemovals.toList())
             Spicetify.showNotification("Przywrócone z Augustusa: $restored")
         } catch (e: Throwable) {
             Spicetify.showNotification("Nie udało się przywrócić - czy Augustus jest uruchomiony?", true)
@@ -98,7 +97,7 @@ object AugustusCopy {
     private suspend fun flushRemovals() {
         if (pendingRemovals.isEmpty()) return
         val uris = pendingRemovals.toList()
-        post<TrashRemoveRequest, TrashRemoveResponse>("/remove", TrashRemoveRequest(uris))
+        AugustusApi.post<TrashRemoveRequest, TrashRemoveResponse>("/trash/remove", TrashRemoveRequest(uris))
         // W trakcie mogły dojść kolejne, więc zdejmujemy tylko wysłane
         pendingRemovals.removeAll(uris)
         savePendingRemovals()
@@ -126,14 +125,14 @@ object AugustusCopy {
         val decorateContextTracks = graphQL?.Definitions?.decorateContextTracks
         val getArtistNameAndTracks = graphQL?.Definitions?.getArtistNameAndTracks
         if (graphQL == null || graphQL.asDynamic().Request == null || decorateContextTracks == null || getArtistNameAndTracks == null) {
-            console.warn("Trashbin: brak zapytań GraphQL, Augustus nie dostanie nazw")
+            console.warn("Augustus: brak zapytań GraphQL, kopia kosza nie dostanie nazw")
             return
         }
 
         val tracks = missingTracks.filter { it !in unavailable }
         val artists = missingArtists.filter { it !in unavailable }
         val long = tracks.size + artists.size >= DESCRIBE_BATCH
-        if (long) Spicetify.showNotification("Trashbin: do opisania dla Augustusa: ${tracks.size + artists.size}…")
+        if (long) Spicetify.showNotification("Do opisania dla Augustusa: ${tracks.size + artists.size}…")
         var described = 0
 
         for (batch in tracks.chunked(DESCRIBE_BATCH)) {
@@ -147,7 +146,7 @@ object AugustusCopy {
                 if (description != null) descriptions.add(description) else unavailable.add(uri)
             }
             if (descriptions.isNotEmpty()) {
-                val response: TrashDescribeResponse = post("/describe", TrashDescriptions(descriptions, emptyList()))
+                val response: TrashDescribeResponse = AugustusApi.post("/trash/describe", TrashDescriptions(descriptions, emptyList()))
                 described += response.described
             }
             delay(DESCRIBE_PAUSE_MS)
@@ -158,46 +157,31 @@ object AugustusCopy {
                 graphQL.Request(getArtistNameAndTracks, json("uri" to uri, "offset" to 0, "limit" to 1)).await()
             val artistUnion: dynamic = (response?.data ?: response)?.artistUnion
             if (artistUnion == null) throw IllegalStateException(JSON.stringify(response?.errors ?: response))
-            val name = text(artistUnion.profile?.name)
+            val name = textOf(artistUnion.profile?.name)
             if (name == null) {
                 unavailable.add(uri)
             } else {
-                val saved: TrashDescribeResponse = post("/describe", TrashDescriptions(emptyList(), listOf(Artist(uri, name))))
+                val saved: TrashDescribeResponse = AugustusApi.post("/trash/describe", TrashDescriptions(emptyList(), listOf(Artist(uri, name))))
                 described += saved.described
             }
             delay(DESCRIBE_PAUSE_MS)
         }
 
-        if (long) Spicetify.showNotification("Trashbin: opisy wysłane do Augustusa: $described")
+        if (long) Spicetify.showNotification("Opisy wysłane do Augustusa: $described")
     }
 
     /** Kształt odpowiedzi taki, jak mapuje go sam klient Spotify (`artists.items[].uri` + `profile.name`, `albumOfTrack`). */
     private fun describeTrack(uri: String, track: dynamic): Track? {
-        val title = text(track.name) ?: return null
+        val title = textOf(track.name) ?: return null
         val items = track.artists?.items as? Array<dynamic> ?: emptyArray()
         val artists = items.mapNotNull { artist ->
-            val artistUri = text(artist?.uri)
-            val name = text(artist?.profile?.name)
+            val artistUri = textOf(artist?.uri)
+            val name = textOf(artist?.profile?.name)
             if (artistUri != null && name != null) Artist(artistUri, name) else null
         }
-        val albumUri = text(track.albumOfTrack?.uri)
-        val albumName = text(track.albumOfTrack?.name)
+        val albumUri = textOf(track.albumOfTrack?.uri)
+        val albumName = textOf(track.albumOfTrack?.name)
         val album = if (albumUri != null && albumName != null) Album(albumUri, albumName) else null
         return Track(uri, title, album, artists)
-    }
-
-    /** Niepusty napis albo `null`. */
-    private fun text(value: dynamic): String? = (value as? String)?.takeIf { it.isNotEmpty() }
-
-    private suspend inline fun <reified Request, reified Response> post(path: String, body: Request): Response {
-        val init = RequestInit(
-            method = "POST",
-            headers = json("Content-Type" to "application/json"),
-            body = Json.encodeToString(body)
-        )
-        val response = window.fetch("$URL$path", init).await()
-        val text = response.text().await()
-        if (!response.ok) throw IllegalStateException("${response.status} $text")
-        return Json.decodeFromString(text)
     }
 }

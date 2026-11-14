@@ -1,7 +1,9 @@
-package org.octavius.modules.spotify.trashbin
+package org.octavius.modules.spotify.spicetify.trash
 
 import kotlinx.browser.document
 import kotlinx.coroutines.launch
+import org.octavius.modules.spotify.spicetify.Spicetify
+import org.octavius.modules.spotify.spicetify.spicetifyScope
 import org.w3c.dom.HTMLElement
 import org.w3c.dom.HTMLInputElement
 import kotlin.js.json
@@ -40,8 +42,8 @@ object Settings {
         val summary = view.querySelector(".summary") as HTMLElement
         summary.textContent = summaryText()
         (view.querySelector("button[name=\"restore\"]") as HTMLElement).onclick = {
-            trashbinScope.launch {
-                AugustusCopy.restore()
+            spicetifyScope.launch {
+                TrashCopy.restore()
                 summary.textContent = summaryText()
             }
         }
