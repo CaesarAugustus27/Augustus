@@ -46,7 +46,7 @@ Also used: Compose Multiplatform with Material 3, HikariCP, Koin, Ktor and kotli
 You need:
 
 - JDK 25
-- PostgreSQL 18 or newer, because the driver uses wire protocol 3.2 and older servers reject it
+- PostgreSQL 18 or newer, because the driver refuses older servers at login
 - a database named `augustus`, with the `pg_trgm` extension available, because a migration creates it
 
 ```bash
