@@ -112,7 +112,7 @@ Each module has `i18n/{en,pl}.json` in its resources and a generated typed objec
 
 `browser-extension/` is a Manifest V3 Chrome extension written in Kotlin/JS. It reads pages on the sites below and talks to
 the running application at `http://localhost:8080`. The application does all the writing to the database. The extension
-sends nothing to the sites it reads.
+sends nothing to the sites it reads. On SteamDB it also adds game descriptions from the Steam store.
 
 | Site                       | What you do                           | What happens in Augustus                                  |
 |----------------------------|---------------------------------------|-----------------------------------------------------------|
@@ -179,6 +179,14 @@ removed from the name of a new game. The status is always Trash, and the game's 
 
 Ignoring a game in the Steam store itself is not picked up.
 
+### SteamDB descriptions
+
+In tables of games on SteamDB, such as the sales, each game gets its short description and five strongest tags from the
+Steam store under its name. The description is in Polish, or in English when the game has none in Polish, and the tags
+are in Polish. The extension asks the Steam store API for up to 100 games at a time, without an API key and without the
+application. The description sits next to the link with the name, so an ignore still reads the same name. A failed
+download shows one red message per page.
+
 ### Messages and the queue
 
 Each repeated change shows a message in the corner of the page: green for 3 seconds when it was saved, red for 10 seconds
@@ -190,15 +198,16 @@ again. A series or game the content script can't find on the page is reported an
 
 ### Parts
 
-| Module           | Role                                                                                      |
-|------------------|-------------------------------------------------------------------------------------------|
-| `popup`          | Compose UI of the popup and the HTTP client for the `check`, `add`, `link`, `open` routes |
-| `content-script` | Runs on the three sites: parses pages, listens to SteamDB, shows messages                 |
-| `background`     | Service worker: watches `updatelist.php`, holds the queue, sends changes                  |
-| `chrome-api`     | `external` declarations for the Chrome APIs in use                                        |
+| Module           | Role                                                                                         |
+|------------------|----------------------------------------------------------------------------------------------|
+| `popup`          | Compose UI of the popup and the HTTP client for the `check`, `add`, `link`, `open` routes    |
+| `content-script` | Runs on the three sites: parses pages, listens to SteamDB, adds descriptions, shows messages |
+| `background`     | Service worker: watches `updatelist.php`, holds the queue, sends changes, asks the Steam API |
+| `chrome-api`     | `external` declarations for the Chrome APIs in use                                           |
 
 `feature-asian-media` and `feature-games` also have a `js` target: `commonMain` holds the DTOs shared with the application
-and `jsMain` holds the page parsers. The routes are defined in `AsianMediaApi` and `GamesApi`:
+and `jsMain` holds the page parsers, and in `feature-games` also the reader of the Steam store API. The routes are
+defined in `AsianMediaApi` and `GamesApi`:
 
 | Route                                          | Called by  | Effect                                       |
 |------------------------------------------------|------------|----------------------------------------------|

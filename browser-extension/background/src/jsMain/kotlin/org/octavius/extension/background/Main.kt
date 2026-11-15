@@ -13,6 +13,7 @@ import kotlin.js.Promise
 
 private const val NOVEL_UPDATES_LIST_MOVE_URL = "http://localhost:8080/api/asian-media/novelupdates/list-move"
 private const val STEAM_IGNORE_URL = "http://localhost:8080/api/games/steam/ignore"
+private const val STEAM_API_URL = "https://api.steampowered.com/"
 private const val PENDING_KEY = "pendingRequests"
 
 external fun fetch(input: String, init: dynamic): Promise<dynamic>
@@ -31,18 +32,49 @@ private val queueLock = Mutex()
  *
  * Zmiana, której nie udało się wysłać, bo Augustus nie działa, czeka w `chrome.storage` i idzie przy
  * następnej zmianie albo następnym starcie tła.
+ *
+ * Do tego tło wysyła za content script zapytania do API Steama (opisy gier na listach SteamDB): content
+ * script podlega CORS strony, a API Steama nie przepuszcza zapytań ze steamdb.info.
  */
 @OptIn(DelicateCoroutinesApi::class)
 fun main() {
     // Nasłuchy muszą się zarejestrować przy pierwszym przebiegu skryptu - inaczej przepada zdarzenie,
     // które właśnie obudziło service worker.
     chrome.webRequest.onCompleted.addListener(::onUpdateList, js("({ urls: ['https://www.novelupdates.com/updatelist.php*'] })"))
-    chrome.runtime.onMessage.addListener { message, sender, _ ->
-        val tabId = sender.tab?.id
-        if (message.action == "mirrorSteamIgnore" && tabId != null) send(STEAM_IGNORE_URL, message.ignore as String, tabId)
-        false
+    chrome.runtime.onMessage.addListener { message, sender, sendResponse ->
+        when (message.action) {
+            "mirrorSteamIgnore" -> {
+                val tabId = sender.tab?.id
+                if (tabId != null) send(STEAM_IGNORE_URL, message.ignore as String, tabId)
+                false
+            }
+            // true: odpowiedź przyjdzie później, więc Chrome ma trzymać sendResponse
+            "fetchSteamApi" -> {
+                relaySteamApi(message.url as String, sendResponse)
+                true
+            }
+            else -> false
+        }
     }
     GlobalScope.launch { queueLock.withLock { flush() } }
+}
+
+/** Odsyła treść odpowiedzi API Steama spod [url] albo `null`, gdy zapytanie się nie udało. */
+@OptIn(DelicateCoroutinesApi::class)
+private fun relaySteamApi(url: String, sendResponse: (dynamic) -> Unit) {
+    if (!url.startsWith(STEAM_API_URL)) {
+        sendResponse(null)
+        return
+    }
+    GlobalScope.launch {
+        val body = try {
+            val response: dynamic = fetch(url, js("({})")).await()
+            if (response.ok as Boolean) response.text().unsafeCast<Promise<String>>().await() else null
+        } catch (e: Throwable) {
+            null
+        }
+        sendResponse(body)
+    }
 }
 
 private fun onUpdateList(details: WebRequestDetails) {

@@ -10,8 +10,9 @@ kotlin {
     sourceSets {
         val jsMain by getting {
             dependencies {
-                // Tło tylko przenosi dane między stroną a aplikacją, więc nie zna ani DTO, ani stron -
-                // opis serii składa content script, a decyzje podejmuje aplikacja.
+                // Tło tylko przenosi dane między stroną a aplikacją albo API Steama, więc nie zna ani DTO,
+                // ani stron - opis serii składa i odpowiedzi Steama czyta content script, a decyzje
+                // podejmuje aplikacja.
                 implementation(projects.browserExtension.chromeApi)
                 implementation(libs.kotlinx.coroutines.core)
             }

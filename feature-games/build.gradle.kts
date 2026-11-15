@@ -10,8 +10,8 @@ plugins {
 
 kotlin {
     jvm("desktop")
-    // Dla wtyczki: DTO API i enumy we wspólnym kodzie, odczyt stron SteamDB w jsMain. Korzysta z nich
-    // content script, więc Compose jest wyłącznie w desktopMain.
+    // Dla wtyczki: DTO API i enumy we wspólnym kodzie, odczyt stron SteamDB i API sklepu Steama w jsMain.
+    // Korzysta z nich content script, więc Compose jest wyłącznie w desktopMain.
     js {
         browser()
     }

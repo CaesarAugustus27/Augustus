@@ -14,6 +14,7 @@
   ],
   "host_permissions": [
     "https://www.novelupdates.com/*",
+    "https://api.steampowered.com/*",
     "http://localhost:8080/*"
   ],
   "content_scripts": [
