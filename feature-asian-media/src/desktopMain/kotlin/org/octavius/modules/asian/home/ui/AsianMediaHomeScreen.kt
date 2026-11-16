@@ -14,9 +14,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import org.octavius.error.rememberSupervisedCoroutineScope
+import org.octavius.localization.Tr
 import org.octavius.modules.asian.form.ui.AsianMediaFormScreen
 import org.octavius.modules.asian.home.model.AsianMediaHomeHandler
-import org.octavius.modules.asian.home.model.AsianMediaHomeState
+import org.octavius.modules.asian.home.model.DashboardData
 import org.octavius.modules.asian.home.model.DashboardItem
 import org.octavius.modules.asian.localization.AsianMediaTr
 import org.octavius.modules.asian.report.ui.AsianMediaReportScreen
@@ -31,36 +32,36 @@ class AsianMediaHomeScreen(override val title: String) : Screen {
         val handler = remember(composableScope) {
             AsianMediaHomeHandler(composableScope)
         }
-
         val state by handler.state.collectAsState()
 
-        LaunchedEffect(Unit) {
-            handler.loadData()
-        }
-
-        Scaffold(
-            floatingActionButton = {
-                ExtendedFloatingActionButton(
-                    text = { Text(AsianMediaTr.Report.newTitle()) },
-                    icon = { Icon(Icons.Default.Add, contentDescription = null) },
-                    onClick = {
-                        AppRouter.navigateTo(AsianMediaFormScreen.create())
-                    }
-                )
-            },
-            floatingActionButtonPosition = FabPosition.End
-        ) { paddingValues ->
-            if (state.isLoading) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
-                }
-            } else {
+        if (state.isLoading) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator()
+            }
+        } else if (state.data == null) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Text(Tr.Statistics.noData())
+            }
+        } else {
+            val data = state.data!!
+            Scaffold(
+                floatingActionButton = {
+                    ExtendedFloatingActionButton(
+                        text = { Text(AsianMediaTr.Report.newTitle()) },
+                        icon = { Icon(Icons.Default.Add, contentDescription = null) },
+                        onClick = {
+                            AppRouter.navigateTo(AsianMediaFormScreen.create())
+                        }
+                    )
+                },
+                floatingActionButtonPosition = FabPosition.End
+            ) { paddingValues ->
                 LazyColumn(
                     modifier = Modifier.fillMaxSize().padding(paddingValues),
                     contentPadding = PaddingValues(16.dp),
                     verticalArrangement = Arrangement.spacedBy(24.dp)
                 ) {
-                    item { StatsHeader(state) }
+                    item { StatsHeader(data) }
 
                     item {
                         OutlinedButton(
@@ -82,7 +83,7 @@ class AsianMediaHomeScreen(override val title: String) : Screen {
                     item {
                         QuickAccessList(
                             title = AsianMediaTr.Home.currentlyReading(),
-                            items = state.currentlyReading,
+                            items = data.currentlyReading,
                             onItemClick = { item ->
                                 AppRouter.navigateTo(AsianMediaFormScreen.create(entityId = item.id))
                             }
@@ -92,7 +93,7 @@ class AsianMediaHomeScreen(override val title: String) : Screen {
                     item {
                         QuickAccessList(
                             title = AsianMediaTr.Home.recentlyAdded(),
-                            items = state.recentlyAdded,
+                            items = data.recentlyAdded,
                             onItemClick = { item ->
                                 AppRouter.navigateTo(AsianMediaFormScreen.create(entityId = item.id))
                             }
@@ -112,35 +113,34 @@ class AsianMediaHomeScreen(override val title: String) : Screen {
 
 
 @Composable
-private fun StatsHeader(state: AsianMediaHomeState) {
-    // ... (bez zmian)
+private fun StatsHeader(data: DashboardData) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         StatCard(
             AsianMediaTr.Home.totalTitles(),
-            state.totalTitles.toString(),
+            data.totalTitles.toString(),
             Modifier.weight(1f)
         )
         StatCard(
             AsianMediaTr.Home.reading(),
-            state.readingCount.toString(),
+            data.readingCount.toString(),
             Modifier.weight(1f)
         )
         StatCard(
             AsianMediaTr.Home.planToRead(),
-            state.planToReadCount.toString(),
+            data.planToReadCount.toString(),
             Modifier.weight(1f)
         )
         StatCard(
             AsianMediaTr.Home.completed(),
-            state.completedCount.toString(),
+            data.completedCount.toString(),
             Modifier.weight(1f)
         )
         StatCard(
             AsianMediaTr.Home.trash(),
-            state.trashCount.toString(),
+            data.trashCount.toString(),
             Modifier.weight(1f)
         )
     }
@@ -148,7 +148,6 @@ private fun StatsHeader(state: AsianMediaHomeState) {
 
 @Composable
 private fun StatCard(title: String, value: String, modifier: Modifier = Modifier) {
-    // ... (bez zmian)
     Card(modifier = modifier) {
         Column(
             modifier = Modifier.padding(16.dp),

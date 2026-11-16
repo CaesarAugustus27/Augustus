@@ -23,6 +23,10 @@ class AsianMediaHomeHandler(
     private val _state = MutableStateFlow(AsianMediaHomeState())
     val state = _state.asStateFlow()
 
+    init {
+        loadData()
+    }
+
     fun getSql(): String {
         val totalTitlesSubquery = db.select("COUNT(*)").from("asian_media.titles").toSql()
 
@@ -107,13 +111,7 @@ class AsianMediaHomeHandler(
                     val data = result.value
                     _state.update {
                         it.copy(
-                            totalTitles = data.totalTitles,
-                            readingCount = data.readingCount,
-                            completedCount = data.completedCount,
-                            planToReadCount = data.planToReadCount,
-                            trashCount = data.trashCount,
-                            currentlyReading = data.currentlyReading.orEmpty(),
-                            recentlyAdded = data.recentlyAdded.orEmpty(),
+                            data = data,
                             isLoading = false
                         )
                     }
