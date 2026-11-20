@@ -14,7 +14,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import org.octavius.error.rememberSupervisedCoroutineScope
-import org.octavius.localization.Tr
 import org.octavius.modules.asian.form.ui.AsianMediaFormScreen
 import org.octavius.modules.asian.home.model.AsianMediaHomeHandler
 import org.octavius.modules.asian.home.model.DashboardData
@@ -32,18 +31,14 @@ class AsianMediaHomeScreen(override val title: String) : Screen {
         val handler = remember(composableScope) {
             AsianMediaHomeHandler(composableScope)
         }
-        val state by handler.state.collectAsState()
+        val dashboard by handler.data.collectAsState()
 
-        if (state.isLoading) {
+        val data = dashboard
+        if (data == null) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator()
             }
-        } else if (state.data == null) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text(Tr.Statistics.noData())
-            }
         } else {
-            val data = state.data!!
             Scaffold(
                 floatingActionButton = {
                     ExtendedFloatingActionButton(

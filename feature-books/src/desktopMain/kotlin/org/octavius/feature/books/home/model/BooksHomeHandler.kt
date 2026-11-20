@@ -3,26 +3,22 @@ package org.octavius.feature.books.home.model
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import io.github.octaviusframework.client.OctaviusClient
-import io.github.octaviusframework.client.DataResult
-import io.github.octaviusframework.driver.exception.OctaviusException
 import io.github.octaviusframework.driver.concurrent.OctaviusDispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import org.octavius.dialog.ErrorDialogConfig
-import org.octavius.dialog.GlobalDialogManager
-import kotlin.collections.orEmpty
 
 class BooksHomeHandler(
     private val scope: CoroutineScope
 ) : KoinComponent {
     private val db: OctaviusClient by inject()
 
-    private val _state: MutableStateFlow<BooksHomeState> = MutableStateFlow(BooksHomeState.Loading)
-    val state = _state.asStateFlow()
+    private val _data = MutableStateFlow<BooksDashboardData?>(null)
+
+    /** `null`, dopóki dane się nie wczytają. */
+    val data = _data.asStateFlow()
 
     private fun getSql(): String {
         // Liczba wszystkich książek
@@ -81,31 +77,13 @@ class BooksHomeHandler(
         """
     }
 
+    /** Wyjątek idzie do `showUnhandledError` scope'u, a [data] zostaje `null`. */
     fun loadData() {
         scope.launch {
             val finalSelectClause = getSql()
-            val result = withContext(OctaviusDispatchers.Virtual) {
-                db.select(finalSelectClause)
-                    .asResult().fetchObjectStrict<BooksDashboardData>()
-            }
-
-            when (result) {
-                is DataResult.Success -> {
-                    val data = result.value
-                    _state.update {
-                        BooksHomeState.Success(data)
-                    }
-                }
-
-                is DataResult.Failure -> {
-                    showError(result.error)
-                    _state.update { BooksHomeState.Error }
-                }
+            _data.value = withContext(OctaviusDispatchers.Virtual) {
+                db.select(finalSelectClause).fetchObjectStrict<BooksDashboardData>()
             }
         }
-    }
-
-    private fun showError(error: OctaviusException) {
-        GlobalDialogManager.show(ErrorDialogConfig(error))
     }
 }

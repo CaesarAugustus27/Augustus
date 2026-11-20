@@ -19,11 +19,9 @@ import org.octavius.feature.books.form.book.ui.BookFormScreen
 import org.octavius.feature.books.home.model.BookDashboardItem
 import org.octavius.feature.books.home.model.BooksDashboardData
 import org.octavius.feature.books.home.model.BooksHomeHandler
-import org.octavius.feature.books.home.model.BooksHomeState
 import org.octavius.feature.books.localization.BooksTr
 import org.octavius.feature.books.report.ui.AuthorsReportScreen
 import org.octavius.feature.books.report.ui.BooksReportScreen
-import org.octavius.localization.Tr
 import org.octavius.navigation.AppRouter
 import org.octavius.navigation.Screen
 
@@ -33,7 +31,7 @@ class BooksHomeScreen(override val title: String) : Screen {
     override fun Content() {
         val composableScope = rememberSupervisedCoroutineScope()
         val handler = remember(composableScope) { BooksHomeHandler(composableScope) }
-        val state by handler.state.collectAsState()
+        val dashboard by handler.data.collectAsState()
 
         LaunchedEffect(Unit) {
             handler.loadData()
@@ -51,14 +49,13 @@ class BooksHomeScreen(override val title: String) : Screen {
             },
             floatingActionButtonPosition = FabPosition.End
         ) { paddingValues ->
-            when (val currentState = state) {
-                is BooksHomeState.Loading -> {
+            when (val data = dashboard) {
+                null -> {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         CircularProgressIndicator()
                     }
                 }
-                is BooksHomeState.Success -> {
-                    val data = currentState.data
+                else -> {
                     LazyColumn(
                         modifier = Modifier.fillMaxSize().padding(paddingValues),
                         contentPadding = PaddingValues(16.dp),
@@ -116,12 +113,6 @@ class BooksHomeScreen(override val title: String) : Screen {
                                 }
                             )
                         }
-                    }
-                }
-                is BooksHomeState.Error -> {
-                    // Dodatkowo Globalny dialog
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text(Tr.Error.dataLoading())
                     }
                 }
             }

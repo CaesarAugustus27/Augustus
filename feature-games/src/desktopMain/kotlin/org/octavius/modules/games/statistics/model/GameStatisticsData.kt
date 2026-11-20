@@ -51,9 +51,3 @@ data class GameStatisticsData(
     fun statusCount(status: GameStatus): Long =
         statusDistribution?.firstOrNull { it.status == status }?.count ?: 0
 }
-
-// Stan, którego będzie używać UI
-data class GameStatisticsState(
-    val data: GameStatisticsData? = null,
-    val isLoading: Boolean = true
-)

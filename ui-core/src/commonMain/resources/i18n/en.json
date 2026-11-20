@@ -24,7 +24,6 @@
     "search": "Search"
   },
   "error": {
-    "dataLoading": "Data loading error",
     "dialog": {
       "dismiss": "Dismiss"
     },
@@ -47,7 +46,6 @@
     "seconds": "Seconds"
   },
   "statistics": {
-    "noData": "No data to display",
     "noItemsInList": "No items to display"
   },
   "colorPicker": {

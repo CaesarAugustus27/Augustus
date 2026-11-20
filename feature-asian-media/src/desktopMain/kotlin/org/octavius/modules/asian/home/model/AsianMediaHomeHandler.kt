@@ -3,25 +3,22 @@ package org.octavius.modules.asian.home.model
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import io.github.octaviusframework.client.OctaviusClient
-import io.github.octaviusframework.client.DataResult
-import io.github.octaviusframework.driver.exception.OctaviusException
 import io.github.octaviusframework.driver.concurrent.OctaviusDispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import org.octavius.dialog.ErrorDialogConfig
-import org.octavius.dialog.GlobalDialogManager
 
 class AsianMediaHomeHandler(
     private val scope: CoroutineScope
 ) : KoinComponent {
     private val db: OctaviusClient by inject()
 
-    private val _state = MutableStateFlow(AsianMediaHomeState())
-    val state = _state.asStateFlow()
+    private val _data = MutableStateFlow<DashboardData?>(null)
+
+    /** `null`, dopóki dane się nie wczytają. */
+    val data = _data.asStateFlow()
 
     init {
         loadData()
@@ -98,34 +95,13 @@ class AsianMediaHomeHandler(
     """
     }
 
+    /** Wyjątek idzie do `showUnhandledError` scope'u, a [data] zostaje `null`. */
     fun loadData() {
         scope.launch {
             val finalSelectClause = getSql()
-            val result = withContext(OctaviusDispatchers.Virtual) {
-                db.select(finalSelectClause)
-                    .asResult().fetchObjectStrict<DashboardData>()
-            }
-
-            when (result) {
-                is DataResult.Success -> {
-                    val data = result.value
-                    _state.update {
-                        it.copy(
-                            data = data,
-                            isLoading = false
-                        )
-                    }
-                }
-
-                is DataResult.Failure -> {
-                    showError(result.error)
-                    _state.update { it.copy(isLoading = false) }
-                }
+            _data.value = withContext(OctaviusDispatchers.Virtual) {
+                db.select(finalSelectClause).fetchObjectStrict<DashboardData>()
             }
         }
-    }
-
-    private fun showError(error: OctaviusException) {
-        GlobalDialogManager.show(ErrorDialogConfig(error))
     }
 }

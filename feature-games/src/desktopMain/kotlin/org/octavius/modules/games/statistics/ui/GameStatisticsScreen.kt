@@ -30,18 +30,14 @@ class GameStatisticsScreen(override val title: String) : Screen {
         val handler = remember(composableScope) {
             GameStatisticsHandler(composableScope)
         }
-        val state by handler.state.collectAsState()
+        val statistics by handler.data.collectAsState()
 
-        if (state.isLoading) {
+        val data = statistics
+        if (data == null) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator()
             }
-        } else if (state.data == null) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text(Tr.Statistics.noData())
-            }
         } else {
-            val data = state.data!!
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(16.dp),

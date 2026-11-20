@@ -5,11 +5,6 @@ data class DashboardItem(
     val mainTitle: String
 )
 
-data class AsianMediaHomeState(
-    val data: DashboardData? = null,
-    val isLoading: Boolean = true
-)
-
 data class DashboardData(
     val totalTitles: Long,
     val readingCount: Long,

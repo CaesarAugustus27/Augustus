@@ -24,7 +24,6 @@
     "search": "Szukaj"
   },
   "error": {
-    "dataLoading": "Bład ładowania danych",
     "dialog": {
       "dismiss": "Odrzuć"
     },
@@ -47,7 +46,6 @@
     "seconds": "Sekundy"
   },
   "statistics": {
-    "noData": "Brak danych do wyświetlenia",
     "noItemsInList": "Brak elementów do wyświetlenia"
   },
   "colorPicker": {
