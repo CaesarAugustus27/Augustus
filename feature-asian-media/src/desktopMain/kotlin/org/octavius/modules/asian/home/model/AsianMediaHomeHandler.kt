@@ -64,9 +64,10 @@ class AsianMediaHomeHandler(
             .orderBy("t.updated_at DESC")
             .limit(5)
             .toSql()
+        // Bez wierszy array_agg daje NULL, a listy w DashboardData są niepuste
         val currentlyReadingSubquery = db.select(
             """
-            array_agg(ROW('id', id, 'main_title', titles[1]))"""
+            COALESCE(array_agg(ROW('id', id, 'main_title', titles[1])), '{}')"""
         ).fromSubquery(innerCurrentlyReading)
             .toSql()
 
@@ -78,7 +79,7 @@ class AsianMediaHomeHandler(
             .toSql()
         val recentlyAddedSubquery = db.select(
             """
-            array_agg(ROW('id', id, 'main_title', titles[1]))"""
+            COALESCE(array_agg(ROW('id', id, 'main_title', titles[1])), '{}')"""
         ).fromSubquery(innerRecentlyAdded)
             .toSql()
 
