@@ -24,8 +24,9 @@
     "atmosphereRating": "Atmosphere Rating (1-10)",
     "basicInfo": "Basic Info",
     "category": {
-      "_one": "Category",
-      "_other": "Categories"
+      "$plural": "count",
+      "one": "Category",
+      "other": "Categories"
     },
     "characters": "Characters",
     "distinctiveAntagonist": "Distinctive Antagonist",

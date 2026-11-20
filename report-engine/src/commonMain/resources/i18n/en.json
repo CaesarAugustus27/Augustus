@@ -101,8 +101,9 @@
     },
     "configuration": {
       "configuration": {
-        "_one": "Report configuration",
-        "_other": "Report configurations"
+        "$plural": "count",
+        "one": "Report configuration",
+        "other": "Report configurations"
       },
       "defaultConfig": "Default",
       "description": "Description (optional)",

@@ -53,5 +53,5 @@ object Settings {
     }
 
     private fun summaryText() =
-        SpotifyTr.Settings.summary(TrashStore.trackUris.size, TrashStore.artistUris.size)
+        SpotifyTr.Settings.summary(tracks = TrashStore.trackUris.size, artists = TrashStore.artistUris.size)
 }

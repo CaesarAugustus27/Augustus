@@ -3,7 +3,7 @@
     "actions": {
       "containsErrors": "Form contains errors",
       "errorsLabel": "Errors:",
-      "itemLabel": "Item {0}"
+      "itemLabel": "Item {position}"
     },
     "dropdown": {
       "loading": "Loading...",
@@ -17,43 +17,46 @@
       "dropHere": "Drop the file here",
       "file": "File",
       "loadedBytes": {
-        "_one": "File loaded ({0} byte)",
-        "_other": "File loaded ({0} bytes)"
+        "$plural": "count",
+        "one": "File loaded ({count} byte)",
+        "other": "File loaded ({count} bytes)"
       }
     },
     "load": {
       "failed": "Could not load the form",
-      "notFound": "Record with id {0} was not found. It may have been deleted."
+      "notFound": "Record with id {id} was not found. It may have been deleted."
     },
     "stringList": {
       "itemPlaceholder": "Enter text..."
     }
   },
   "validation": {
-    "duplicateInRow": "Duplicate value in row {0}",
+    "duplicateInRow": "Duplicate value in row {row}",
     "fieldRequired": "This field is required",
     "invalidFormat": "Invalid format",
     "invalidNumberFormat": "Invalid number format",
-    "itemMaxLength": "Item {0}: Maximum length is {1} characters",
-    "itemMinLength": "Item {0}: Minimum length is {1} characters",
-    "itemPatternError": "Item {0}: {1}",
-    "maxDecimalPlaces": "Maximum {0} decimal places",
-    "maxInterval": "Interval must be shorter than {0}",
-    "maxItems": "Maximum {0} items",
+    "itemMaxLength": "Item {item}: Maximum length is {max} characters",
+    "itemMinLength": "Item {item}: Minimum length is {min} characters",
+    "itemPatternError": "Item {item}: {message}",
+    "maxDecimalPlaces": "Maximum {places} decimal places",
+    "maxInterval": "Interval must be shorter than {max}",
+    "maxItems": "Maximum {max} items",
     "maximumItems": {
-      "_one": "Maximum {0} item",
-      "_other": "Maximum {0} items"
+      "$plural": "count",
+      "one": "Maximum {count} item",
+      "other": "Maximum {count} items"
     },
-    "maxLength": "Maximum length is {0} characters",
-    "maxValue": "Value must be less than or equal to {0}",
-    "minInterval": "Interval must be longer than {0}",
-    "minItems": "Minimum {0} items required",
+    "maxLength": "Maximum length is {max} characters",
+    "maxValue": "Value must be less than or equal to {max}",
+    "minInterval": "Interval must be longer than {min}",
+    "minItems": "Minimum {min} items required",
     "minimumItems": {
-      "_one": "Minimum {0} item required",
-      "_other": "Minimum {0} items required"
+      "$plural": "count",
+      "one": "Minimum {count} item required",
+      "other": "Minimum {count} items required"
     },
-    "minLength": "Minimum length is {0} characters",
-    "minValue": "Value must be greater than or equal to {0}",
-    "multipleOf": "Value must be a multiple of {0}"
+    "minLength": "Minimum length is {min} characters",
+    "minValue": "Value must be greater than or equal to {min}",
+    "multipleOf": "Value must be a multiple of {step}"
   }
 }

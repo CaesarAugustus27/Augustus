@@ -101,8 +101,9 @@
     },
     "configuration": {
       "configuration": {
-        "_many": "Konfiguracje raportu",
-        "_one": "Konfiguracja raportu"
+        "$plural": "count",
+        "one": "Konfiguracja raportu",
+        "other": "Konfiguracje raportu"
       },
       "defaultConfig": "Domyślna",
       "description": "Opis (opcjonalny)",

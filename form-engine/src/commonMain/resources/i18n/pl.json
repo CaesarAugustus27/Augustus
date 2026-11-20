@@ -3,7 +3,7 @@
     "actions": {
       "containsErrors": "Formularz zawiera błędy",
       "errorsLabel": "Błędy:",
-      "itemLabel": "Element {0}"
+      "itemLabel": "Element {position}"
     },
     "dropdown": {
       "loading": "Wczytywanie...",
@@ -17,46 +17,52 @@
       "dropHere": "Upuść plik tutaj",
       "file": "Plik",
       "loadedBytes": {
-        "_one": "Załadowano plik ({0} bajt)",
-        "_few": "Załadowano plik ({0} bajty)",
-        "_many": "Załadowano plik ({0} bajtów)"
+        "$plural": "count",
+        "one": "Załadowano plik ({count} bajt)",
+        "few": "Załadowano plik ({count} bajty)",
+        "many": "Załadowano plik ({count} bajtów)",
+        "other": "Załadowano plik ({count} bajta)"
       }
     },
     "load": {
       "failed": "Nie udało się wczytać formularza",
-      "notFound": "Nie znaleziono rekordu o id {0}. Mógł zostać usunięty."
+      "notFound": "Nie znaleziono rekordu o id {id}. Mógł zostać usunięty."
     },
     "stringList": {
       "itemPlaceholder": "Wprowadź tekst..."
     }
   },
   "validation": {
-    "duplicateInRow": "Duplikat wartości w wierszu {0}",
+    "duplicateInRow": "Duplikat wartości w wierszu {row}",
     "fieldRequired": "To pole jest wymagane",
     "invalidFormat": "Nieprawidłowy format",
     "invalidNumberFormat": "Nieprawidłowy format liczby",
-    "itemMaxLength": "Element {0}: Maksymalna długość to {1} znaków",
-    "itemMinLength": "Element {0}: Minimalna długość to {1} znaków",
-    "itemPatternError": "Element {0}: {1}",
-    "maxDecimalPlaces": "Maksymalnie {0} miejsc po przecinku",
-    "maxInterval": "Interwał musi być krótszy niż {0}",
-    "maxItems": "Maksymalnie {0} elementów",
+    "itemMaxLength": "Element {item}: Maksymalna długość to {max} znaków",
+    "itemMinLength": "Element {item}: Minimalna długość to {min} znaków",
+    "itemPatternError": "Element {item}: {message}",
+    "maxDecimalPlaces": "Maksymalnie {places} miejsc po przecinku",
+    "maxInterval": "Interwał musi być krótszy niż {max}",
+    "maxItems": "Maksymalnie {max} elementów",
     "maximumItems": {
-      "_one": "Maksymalnie {0} element",
-      "_few": "Maksymalnie {0} elementy",
-      "_many": "Maksymalnie {0} elementów"
+      "$plural": "count",
+      "one": "Maksymalnie {count} element",
+      "few": "Maksymalnie {count} elementy",
+      "many": "Maksymalnie {count} elementów",
+      "other": "Maksymalnie {count} elementu"
     },
-    "maxLength": "Maksymalna długość to {0} znaków",
-    "maxValue": "Wartość musi być mniejsza lub równa {0}",
-    "minInterval": "Interwał musi być dłuższy niż {0}",
-    "minItems": "Wymagane minimum {0} elementów",
+    "maxLength": "Maksymalna długość to {max} znaków",
+    "maxValue": "Wartość musi być mniejsza lub równa {max}",
+    "minInterval": "Interwał musi być dłuższy niż {min}",
+    "minItems": "Wymagane minimum {min} elementów",
     "minimumItems": {
-      "_one": "Wymagany minimum {0} element",
-      "_few": "Wymagane minimum {0} elementy",
-      "_many": "Wymagane minimum {0} elementów"
+      "$plural": "count",
+      "one": "Wymagany minimum {count} element",
+      "few": "Wymagane minimum {count} elementy",
+      "many": "Wymagane minimum {count} elementów",
+      "other": "Wymagane minimum {count} elementu"
     },
-    "minLength": "Minimalna długość to {0} znaków",
-    "minValue": "Wartość musi być większa lub równa {0}",
-    "multipleOf": "Wartość musi być wielokrotnością {0}"
+    "minLength": "Minimalna długość to {min} znaków",
+    "minValue": "Wartość musi być większa lub równa {min}",
+    "multipleOf": "Wartość musi być wielokrotnością {step}"
   }
 }

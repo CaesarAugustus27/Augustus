@@ -39,19 +39,19 @@ class StringListValidator(
                     if (item.isNotBlank()) {
                         itemValidation.minLength?.let { minLength ->
                             if (item.length < minLength) {
-                                tempErrors.add(FormTr.Validation.itemMinLength(index + 1, minLength))
+                                tempErrors.add(FormTr.Validation.itemMinLength(item = index + 1, min = minLength))
                             }
                         }
                         itemValidation.maxLength?.let { maxLength ->
                             if (item.length > maxLength) {
-                                tempErrors.add(FormTr.Validation.itemMaxLength(index + 1, maxLength))
+                                tempErrors.add(FormTr.Validation.itemMaxLength(item = index + 1, max = maxLength))
                             }
                         }
                         itemValidation.pattern?.let { pattern ->
                             if (!pattern.matches(item)) {
                                 tempErrors.add(FormTr.Validation.itemPatternError(
-                                    index + 1,
-                                    itemValidation.patternErrorMessage ?: FormTr.Validation.invalidFormat()
+                                    item = index + 1,
+                                    message = itemValidation.patternErrorMessage ?: FormTr.Validation.invalidFormat()
                                 ))
                             }
                         }

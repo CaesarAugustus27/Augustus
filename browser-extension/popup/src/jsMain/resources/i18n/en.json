@@ -3,16 +3,16 @@
     "analyzing": "Analyzing page...",
     "parseError": "Failed to parse page or no parser found.",
     "invalidData": "Received invalid data from script.",
-    "moduleNotFound": "Handler module not found: {0}",
+    "moduleNotFound": "Handler module not found: {module}",
     "processingError": "Error occurred during data processing by module."
   },
   "asianMedia": {
     "header": "Augustus Helper",
-    "source": "Source: {0}",
+    "source": "Source: {source}",
     "alreadyInDatabase": "Already in the database",
     "similarTitleInDatabase": "Similar title in the database!",
     "unknownTitle": "Unknown title",
-    "found": "Found: \"{0}\"",
+    "found": "Found: \"{title}\"",
     "detectedTitles": "Detected titles:",
     "noTitles": "No titles found...",
     "type": "Type",
@@ -22,7 +22,7 @@
     "checking": "Checking...",
     "openInAugustus": "Open in Augustus",
     "opened": "Opened in the app",
-    "linkTo": "Link to \"{0}\"",
+    "linkTo": "Link to \"{title}\"",
     "addAsNew": "Add as a new title",
     "addToAugustus": "Add to Augustus",
     "noConnection": "Cannot connect to the Augustus server. Make sure the application is running."

@@ -24,8 +24,9 @@
     "atmosphereRating": "Ocena atmosfery (1-10)",
     "basicInfo": "Podstawowe informacje",
     "category": {
-      "_one": "Kategoria",
-      "_few": "Kategorie"
+      "$plural": "count",
+      "one": "Kategoria",
+      "other": "Kategorie"
     },
     "characters": "Postacie",
     "distinctiveAntagonist": "Charakterystyczny antagonista",

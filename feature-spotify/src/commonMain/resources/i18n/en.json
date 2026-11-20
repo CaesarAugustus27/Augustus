@@ -10,15 +10,15 @@
     "saveFailed": "Could not save the trash to local storage"
   },
   "copy": {
-    "describing": "To describe for Augustus: {0}…",
-    "described": "Descriptions sent to Augustus: {0}",
-    "restored": "Restored from Augustus: {0}",
+    "describing": "To describe for Augustus: {count}…",
+    "described": "Descriptions sent to Augustus: {count}",
+    "restored": "Restored from Augustus: {count}",
     "restoreFailed": "Could not restore - is Augustus running?"
   },
   "settings": {
     "title": "Trash",
     "playbarButton": "Trash button in the player bar",
-    "summary": "Songs in the trash: {0}, artists: {1}.",
+    "summary": "Songs in the trash: {tracks}, artists: {artists}.",
     "restore": "Restore from Augustus",
     "restoreDescription": "Adds everything Augustus has and this trash lacks."
   }

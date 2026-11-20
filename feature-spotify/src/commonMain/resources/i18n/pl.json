@@ -10,15 +10,15 @@
     "saveFailed": "Nie udało się zapisać kosza w LocalStorage"
   },
   "copy": {
-    "describing": "Do opisania dla Augustusa: {0}…",
-    "described": "Opisy wysłane do Augustusa: {0}",
-    "restored": "Przywrócone z Augustusa: {0}",
+    "describing": "Do opisania dla Augustusa: {count}…",
+    "described": "Opisy wysłane do Augustusa: {count}",
+    "restored": "Przywrócone z Augustusa: {count}",
     "restoreFailed": "Nie udało się przywrócić - czy Augustus jest uruchomiony?"
   },
   "settings": {
     "title": "Kosz",
     "playbarButton": "Przycisk kosza w pasku odtwarzacza",
-    "summary": "Utworów w koszu: {0}, wykonawców: {1}.",
+    "summary": "Utworów w koszu: {tracks}, wykonawców: {artists}.",
     "restore": "Przywróć z Augustusa",
     "restoreDescription": "Dokłada wszystko, co Augustus ma, a czego brakuje w tym koszu."
   }
