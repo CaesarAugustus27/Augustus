@@ -37,7 +37,6 @@ data class DashboardGameByRating(
 data class GameStatisticsData(
     val totalGames: Long,
     val totalPlaytimeHours: BigDecimal,
-    val playedGamesCount: Long,
     val avgPlaytimeForPlayed: BigDecimal,
     val statusDistribution: List<DashboardStatusCount>?,
     val avgStoryRating: BigDecimal?,
@@ -47,7 +46,11 @@ data class GameStatisticsData(
     val highestRatedGames: List<DashboardGameByRating>?,
     val favoriteCategoryName: String?,
     val favoriteSeriesName: String?
-)
+) {
+    /** Liczba gier w danym statusie; status bez żadnej gry nie ma wiersza w rozkładzie, więc daje 0. */
+    fun statusCount(status: GameStatus): Long =
+        statusDistribution?.firstOrNull { it.status == status }?.count ?: 0
+}
 
 // Stan, którego będzie używać UI
 data class GameStatisticsState(

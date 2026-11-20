@@ -11,6 +11,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import org.octavius.domain.game.GameStatus
 import org.octavius.error.rememberSupervisedCoroutineScope
 import org.octavius.localization.Tr
 import org.octavius.modules.games.form.game.ui.GameFormScreen
@@ -77,6 +78,14 @@ class GameStatisticsScreen(override val title: String) : Screen {
 }
 
 
+private val statusCardOrder = listOf(
+    GameStatus.Playing,
+    GameStatus.ToPlay,
+    GameStatus.Played,
+    GameStatus.WithoutTheEnd,
+    GameStatus.Trash
+)
+
 @Composable
 private fun KpiStats(data: GameStatisticsData) {
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -86,7 +95,9 @@ private fun KpiStats(data: GameStatisticsData) {
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             StatCard(GamesTr.Stats.totalGames(), data.totalGames.toString(), Modifier.weight(1f))
-            StatCard(GamesTr.Stats.playedGames(), data.playedGamesCount.toString(), Modifier.weight(1f))
+            statusCardOrder.forEach { status ->
+                StatCard(status.toDisplayString(), data.statusCount(status).toString(), Modifier.weight(1f))
+            }
         }
         Row(
             modifier = Modifier.fillMaxWidth(),

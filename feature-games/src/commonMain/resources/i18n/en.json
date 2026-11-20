@@ -83,7 +83,6 @@
     "title": "Game Statistics",
     "kpiHeader": "Basic Statistics",
     "totalGames": "Total Games",
-    "playedGames": "Games Played",
     "totalPlaytime": "Total Playtime",
     "avgPlaytime": "Average Playtime",
     "ratingHeader": "Ratings",
