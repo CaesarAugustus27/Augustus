@@ -1,11 +1,15 @@
+import org.jetbrains.kotlin.gradle.plugin.KotlinPlatformType
+
 plugins {
     alias(libs.plugins.octaviusI18n)
     alias(libs.plugins.kotlinMultiplatform)
+    alias(libs.plugins.composeMultiplatform)
+    alias(libs.plugins.composeCompiler)
     alias(libs.plugins.kotlinSerialization)
 }
 
 kotlin {
-    // API kopii kosza i polubionych, bez ekranów, więc bez Compose
+    // API kopii kosza i polubionych oraz zakładka ze statystykami
     jvm("desktop")
     // Rozszerzenie Spicetify; DTO API dzieli z aplikacją przez commonMain
     js {
@@ -28,7 +32,11 @@ kotlin {
         desktopMain.dependencies {
             implementation(projects.featureContract)
             implementation(projects.navigation)
+            implementation(projects.uiCore)
+            implementation(projects.reportEngine)
             implementation(libs.octavius.client)
+            implementation(libs.kotlinx.coroutines.core)
+            implementation(libs.kotlinx.datetime)
 
             implementation(project.dependencies.platform(libs.koin.bom))
             implementation(libs.koin.core)
@@ -40,7 +48,12 @@ kotlin {
     }
 }
 
-// Napisy rozszerzenia; język bierze z klienta Spotify
+// Compose jest tylko w desktopMain, a kompilator nie przyjmuje targetu bez Compose Runtime
+composeCompiler {
+    targetKotlinPlatforms.set(setOf(KotlinPlatformType.jvm))
+}
+
+// Napisy rozszerzenia i zakładki. Rozszerzenie bierze język z klienta Spotify
 octaviusI18n {
     generators {
         create("spotify") {

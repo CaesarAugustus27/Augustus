@@ -24,7 +24,7 @@ of media is a feature module with its own tab, database schema, forms and report
 | `feature-games`       | Games, with series, categories, play time and ratings           |
 | `feature-books`       | Books and authors                                               |
 | `feature-sandbox`     | Every form control and report column, with no tables of its own |
-| `feature-spotify`     | Copies of the Spotify trash and Liked Songs, with no tab        |
+| `feature-spotify`     | Copies of the Spotify trash and Liked Songs, with statistics    |
 
 A [browser extension](#browser-extension) adds series from NovelUpdates and MangaUpdates, and repeats in the catalogue
 what you do on NovelUpdates and SteamDB. A [Spicetify extension](#spotify-extension) skips the songs and artists you never
@@ -81,7 +81,7 @@ Augustus/
 ├── feature-books/
 ├── feature-games/
 ├── feature-sandbox/
-├── feature-spotify/         # Trash copy API and its Spicetify extension (jsMain)
+├── feature-spotify/         # Trash and Liked Songs copies, statistics, Spicetify extension (jsMain)
 ├── feature-contract/        # FeatureModule and ApiModule interfaces
 │
 ├── api-server/              # Embedded Ktor server for the extension
@@ -257,6 +257,9 @@ The extension also copies Liked Songs. They live on Spotify's servers, so this c
 starts and after every change, made on any device, the extension sends the whole list with the date each song was
 liked and its title, album and artists. The application adds the new songs and deletes the ones you unliked. Local
 files are left out.
+
+The Spotify tab in the application only shows the copies: their sizes, Liked Songs by the year they were liked, the trash
+by week, the albums with the most songs in the trash, and a report of artists with their liked and trashed songs.
 
 | Route                              | Effect                                                       |
 |------------------------------------|--------------------------------------------------------------|

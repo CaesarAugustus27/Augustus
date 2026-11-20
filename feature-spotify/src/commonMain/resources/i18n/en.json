@@ -1,4 +1,29 @@
 {
+  "tab": "Spotify",
+  "stats": {
+    "title": "Spotify",
+    "trashed": "In the trash",
+    "liked": "Liked",
+    "artists": "Artists",
+    "albums": "Albums",
+    "trashedSince": "Trashed since {date}",
+    "likedByYear": "Liked songs by year added",
+    "likedByYearNote": "Songs liked now. Unliked ones leave no trace.",
+    "trashByWeek": "Trash by week since {date}",
+    "trashByWeekNote": "Songs trashed earlier carry the date of the first export they appeared in, not the date they were trashed.",
+    "topTrashedAlbums": "Albums with the most songs in the trash",
+    "albumCounts": "Trash: {trashed} · liked: {liked}",
+    "artistsReport": "Artists: liked and trash"
+  },
+  "artists": {
+    "title": "Artists",
+    "name": "Artist",
+    "liked": "Liked",
+    "trashed": "In the trash",
+    "total": "Songs",
+    "likedShare": "Liked share",
+    "artistTrashed": "Artist in the trash"
+  },
   "trash": {
     "add": "Put in the trash",
     "remove": "Take out of the trash",

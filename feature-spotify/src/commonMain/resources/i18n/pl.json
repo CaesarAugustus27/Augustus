@@ -1,4 +1,29 @@
 {
+  "tab": "Spotify",
+  "stats": {
+    "title": "Spotify",
+    "trashed": "W koszu",
+    "liked": "Polubione",
+    "artists": "Wykonawcy",
+    "albums": "Albumy",
+    "trashedSince": "W koszu od {date}",
+    "likedByYear": "Polubione według roku dodania",
+    "likedByYearNote": "Utwory polubione teraz. Odlajkowane nie zostawiają śladu.",
+    "trashByWeek": "Kosz tygodniami od {date}",
+    "trashByWeekNote": "Utwory wyrzucone wcześniej mają datę pierwszego eksportu, w którym się pojawiły, a nie datę wyrzucenia.",
+    "topTrashedAlbums": "Albumy z największą liczbą utworów w koszu",
+    "albumCounts": "W koszu: {trashed} · polubione: {liked}",
+    "artistsReport": "Wykonawcy: polubione i kosz"
+  },
+  "artists": {
+    "title": "Wykonawcy",
+    "name": "Wykonawca",
+    "liked": "Polubione",
+    "trashed": "W koszu",
+    "total": "Utwory",
+    "likedShare": "Odsetek polubionych",
+    "artistTrashed": "Wykonawca w koszu"
+  },
   "trash": {
     "add": "Wrzuć do kosza",
     "remove": "Wyjmij z kosza",
