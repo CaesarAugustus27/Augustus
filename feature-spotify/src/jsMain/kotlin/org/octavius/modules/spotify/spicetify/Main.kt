@@ -43,7 +43,7 @@ private fun ready(): Boolean {
 
 private fun start() {
     // Napisy w języku klienta, czytanym raz przy starcie; język bez tłumaczeń dostaje angielskie
-    OctaviusI18n.currentLanguage = Spicetify.Locale?.getLocale()?.substringBefore('-') ?: "en"
+    OctaviusI18n.currentLanguage = Spicetify.Locale?.getLocale() ?: "en"
 
     Settings.register()
     TrashMenu.register()

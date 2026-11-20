@@ -27,7 +27,7 @@ import kotlin.coroutines.resume
 @OptIn(ExperimentalComposeUiApi::class)
 fun main() {
     // Popup mówi językiem przeglądarki; język bez tłumaczeń spada na angielski
-    OctaviusI18n.currentLanguage = window.navigator.language.substringBefore('-')
+    OctaviusI18n.currentLanguage = window.navigator.language
 
     // Moduły wtyczki
     val extensionModules: List<ExtensionModule> = listOf(
