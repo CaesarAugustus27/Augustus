@@ -9,7 +9,9 @@
     "form": "Formularz testowy",
     "formDescription": "Testowanie kontrolek formularza: tekst, liczby, enum, data, lista",
     "report": "Raport testowy",
-    "reportDescription": "Testowanie tabeli z filtrowaniem, sortowaniem i akcjami"
+    "reportDescription": "Testowanie tabeli z filtrowaniem, sortowaniem i akcjami",
+    "nestedForm": "Formularz zagnieżdżony",
+    "nestedFormDescription": "Trzy poziomy list wczytane jednym zapytaniem"
   },
   "popup": {
     "title": "Popupy i dialogi",
@@ -47,6 +49,22 @@
     "innerString": "Wewnętrzny tekst",
     "innerBoolean": "Wewnętrzny przełącznik",
     "savedMessage": "Dane zapisane (sandbox)"
+  },
+  "nestedForm": {
+    "title": "Legion",
+    "legion": "Legion",
+    "cohorts": "Kohorty",
+    "cohortName": "Kohorta",
+    "showStrength": "Pokaż stan osobowy",
+    "centuries": "Centurie",
+    "centurion": "Centurion",
+    "contubernia": "Kontubernia",
+    "contuberniumName": "Kontubernium",
+    "soldiers": "Żołnierze",
+    "fullStrength": "Pełny stan",
+    "resetLegion": "Wyzeruj legion",
+    "changes": "+{added} ~{modified} -{deleted}",
+    "savedMessage": "Kohorty {cohorts} · centurie {centuries} · kontubernia {contubernia}"
   },
   "report": {
     "title": "Raport testowy",

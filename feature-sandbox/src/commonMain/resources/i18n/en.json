@@ -9,7 +9,9 @@
     "form": "Test Form",
     "formDescription": "Testing form controls: text, numbers, enum, data, list",
     "report": "Test Report",
-    "reportDescription": "Testing table with filtering, sorting, and actions"
+    "reportDescription": "Testing table with filtering, sorting, and actions",
+    "nestedForm": "Nested Form",
+    "nestedFormDescription": "Three levels of lists loaded with one query"
   },
   "popup": {
     "title": "Popups and Dialogs",
@@ -47,6 +49,22 @@
     "innerString": "Inner Text",
     "innerBoolean": "Inner Toggle",
     "savedMessage": "Data saved (sandbox)"
+  },
+  "nestedForm": {
+    "title": "Legion",
+    "legion": "Legion",
+    "cohorts": "Cohorts",
+    "cohortName": "Cohort",
+    "showStrength": "Show strength",
+    "centuries": "Centuries",
+    "centurion": "Centurion",
+    "contubernia": "Contubernia",
+    "contuberniumName": "Contubernium",
+    "soldiers": "Soldiers",
+    "fullStrength": "Full strength",
+    "resetLegion": "Reset legion",
+    "changes": "+{added} ~{modified} -{deleted}",
+    "savedMessage": "Cohorts {cohorts} · centuries {centuries} · contubernia {contubernia}"
   },
   "report": {
     "title": "Test Report",

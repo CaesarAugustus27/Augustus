@@ -3,6 +3,7 @@ package org.octavius.modules.sandbox.navigation
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ListAlt
+import androidx.compose.material.icons.filled.AccountTree
 import androidx.compose.material.icons.filled.BugReport
 import androidx.compose.material.icons.filled.TableChart
 import androidx.compose.material3.*
@@ -12,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import org.octavius.modules.sandbox.ComponentTestScreen
+import org.octavius.modules.sandbox.form.nested.SandboxNestedFormScreen
 import org.octavius.modules.sandbox.form.ui.SandboxFormScreen
 import org.octavius.modules.sandbox.localization.SandboxTr
 import org.octavius.modules.sandbox.popup.PopupShowcaseScreen
@@ -95,6 +97,21 @@ class SandboxHomeScreen : Screen {
                     onClick = { AppRouter.navigateTo(ComponentTestScreen()) },
                     modifier = Modifier.weight(1f)
                 )
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                QuickActionCard(
+                    title = SandboxTr.Home.nestedForm(),
+                    description = SandboxTr.Home.nestedFormDescription(),
+                    icon = Icons.Default.AccountTree,
+                    onClick = { AppRouter.navigateTo(SandboxNestedFormScreen.create()) },
+                    modifier = Modifier.weight(1f)
+                )
+
+                Spacer(modifier = Modifier.weight(1f))
             }
         }
     }
