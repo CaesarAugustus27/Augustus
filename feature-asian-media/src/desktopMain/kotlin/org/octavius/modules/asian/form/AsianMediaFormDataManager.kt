@@ -3,15 +3,15 @@ package org.octavius.modules.asian.form
 import io.github.octaviusframework.client.transaction.TransactionPlan
 import io.github.octaviusframework.client.transaction.TransactionValue
 import io.github.octaviusframework.client.transaction.toTransactionValue
-import io.github.octaviusframework.form.component.FormDataManager
 import io.github.octaviusframework.form.control.base.FormResultData
 import io.github.octaviusframework.form.control.base.getCurrent
 import io.github.octaviusframework.form.control.base.getCurrentAs
 import io.github.octaviusframework.form.control.base.getInitial
 import io.github.octaviusframework.form.control.base.getInitialAs
 import io.github.octaviusframework.form.control.type.repeatable.RepeatableResultValue
+import io.github.octaviusframework.form.database.DatabaseFormDataManager
 
-class AsianMediaFormDataManager : FormDataManager() {
+class AsianMediaFormDataManager : DatabaseFormDataManager() {
 
     private fun loadAsianMediaData(loadedId: Any?) = loadData(loadedId) {
         from("asian_media.titles", "t")
@@ -52,27 +52,24 @@ class AsianMediaFormDataManager : FormDataManager() {
         return loadedData + payload
     }
 
-    override fun definedFormActions(): Map<String, (formResultData: FormResultData) -> Boolean> {
+    override fun definedFormPlans(): Map<String, (formResultData: FormResultData) -> TransactionPlan> {
         return mapOf(
-            "save" to { formData -> processSave(formData) },
-            "delete" to { formData -> processDelete(formData) /* Istnienie ID zapewnia logika ukrywania przycisku */ }
+            "save" to { formData -> planSave(formData) },
+            "delete" to { formData -> planDelete(formData) /* Istnienie ID zapewnia logika ukrywania przycisku */ }
         )
     }
 
-    fun processDelete(formResultData: FormResultData): Boolean {
+    fun planDelete(formResultData: FormResultData): TransactionPlan {
         // Wykorzystanie CASCADE
-        val plan = TransactionPlan().apply {
+        return TransactionPlan().apply {
             deleteFrom("asian_media.titles")
                 .where("id = @id")
                 .asStep()
                 .executeUpdate("id" to formResultData.getInitial("id"))
         }
-
-        db.executeTransactionPlan(plan)
-        return true
     }
 
-    fun processSave(formResultData: FormResultData): Boolean {
+    fun planSave(formResultData: FormResultData): TransactionPlan {
         val plan = TransactionPlan()
 
         with(plan) {
@@ -163,9 +160,7 @@ class AsianMediaFormDataManager : FormDataManager() {
             }
         }
 
-        // Wykonanie całego planu
-        db.executeTransactionPlan(plan)
-        return true
+        return plan
     }
 
     private fun addPublicationVolumesUpdateOperation(

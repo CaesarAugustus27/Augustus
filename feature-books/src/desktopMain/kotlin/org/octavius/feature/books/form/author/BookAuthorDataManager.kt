@@ -1,13 +1,14 @@
 package org.octavius.feature.books.form.author
 
-import io.github.octaviusframework.driver.exception.ConstraintViolationException
-import io.github.octaviusframework.form.component.FormDataManager
+import io.github.octaviusframework.client.transaction.TransactionPlan
 import io.github.octaviusframework.form.control.base.FormResultData
 import io.github.octaviusframework.form.control.base.getCurrent
 import io.github.octaviusframework.form.control.base.getInitial
+import io.github.octaviusframework.form.database.ConstraintError
+import io.github.octaviusframework.form.database.DatabaseFormDataManager
 import org.octavius.feature.books.localization.BooksTr
 
-class BookAuthorDataManager : FormDataManager() {
+class BookAuthorDataManager : DatabaseFormDataManager() {
 
     private fun loadData(loadedId: Any?) = loadData(loadedId) {
         from("books.authors", "a")
@@ -23,54 +24,49 @@ class BookAuthorDataManager : FormDataManager() {
         return loadedData + payload
     }
 
-    override fun definedFormActions(): Map<String, (FormResultData) -> Boolean> {
+    override fun definedFormPlans(): Map<String, (FormResultData) -> TransactionPlan> {
         return mapOf(
-            "save" to { formData -> processSave(formData) },
-            "delete" to { formData -> processDelete(formData) }
+            "save" to { formData -> planSave(formData) },
+            "delete" to { formData -> planDelete(formData) }
         )
     }
 
-    private fun processSave(formResultData: FormResultData): Boolean {
+    // book_to_authors ma ON DELETE RESTRICT: autora z książkami baza nie usunie.
+    override fun constraintErrors() = mapOf(
+        "authors_name_key" to ConstraintError.Field("name", BooksTr.Authors.Validation.nameExists()),
+        "book_to_authors_author_id_fkey" to ConstraintError.Global(BooksTr.Authors.Validation.hasBooks())
+    )
+
+    private fun planSave(formResultData: FormResultData): TransactionPlan {
         val loadedId = formResultData.getInitial("id")
         val params = mapOf(
             "name" to formResultData.getCurrent("name"),
             "sort_name" to formResultData.getCurrent("sort_name")
         )
 
-        try {
+        return TransactionPlan().apply {
             if (loadedId != null) {
-                db.update("books.authors")
+                update("books.authors")
                     .setValues(params)
                     .where("id = @id")
+                    .asStep()
                     .executeUpdate(params + ("id" to loadedId))
             } else {
-                db.insertInto("books.authors")
+                insertInto("books.authors")
                     .values(params)
+                    .asStep()
                     .executeUpdate(params)
             }
-        } catch (e: ConstraintViolationException) {
-            if (e.constraint != "authors_name_key") throw e
-            errorManager.setFieldErrors("name", listOf(BooksTr.Authors.Validation.nameExists()))
-            return false
         }
-        return true
     }
 
-    private fun processDelete(formResultData: FormResultData): Boolean {
-        // Brak id oznacza, ze nie ma czego usuwac - nie jest to blad, wiec formularz
-        // ma sie normalnie zamknac. Przycisk usuwania i tak jest ukryty gdy id == null.
-        val loadedId = formResultData.getInitial("id") ?: return true
+    private fun planDelete(formResultData: FormResultData): TransactionPlan {
+        // Brak id oznacza, ze nie ma czego usuwac - nie jest to blad, wiec pusty plan konczy sie sukcesem
+        // i formularz normalnie sie zamyka. Przycisk usuwania i tak jest ukryty gdy id == null.
+        val loadedId = formResultData.getInitial("id") ?: return TransactionPlan()
 
-        // book_to_authors ma ON DELETE RESTRICT: autora z książkami baza nie usunie.
-        try {
-            db.deleteFrom("books.authors")
-                .where("id = @id")
-                .executeUpdate(mapOf("id" to loadedId))
-        } catch (e: ConstraintViolationException) {
-            if (e.constraint != "book_to_authors_author_id_fkey") throw e
-            errorManager.addGlobalError(BooksTr.Authors.Validation.hasBooks())
-            return false
+        return TransactionPlan().apply {
+            deleteFrom("books.authors").where("id = @id").asStep().executeUpdate("id" to loadedId)
         }
-        return true
     }
 }

@@ -6,7 +6,8 @@
 
 [![Kotlin](https://img.shields.io/badge/Kotlin-2.4-7F52FF?logo=kotlin&logoColor=white)](https://kotlinlang.org)
 [![Compose](https://img.shields.io/badge/Compose-Multiplatform-4285F4?logo=jetpackcompose&logoColor=white)](https://www.jetbrains.com/lp/compose-multiplatform/)
-[![KDoc](https://img.shields.io/badge/KDoc-Documentation-blue)](https://caesaraugustus27.github.io/Augustus/form-engine/)
+[![KDoc core](https://img.shields.io/badge/KDoc-core-blue)](https://caesaraugustus27.github.io/Augustus/form-engine/core/)
+[![KDoc database](https://img.shields.io/badge/KDoc-database-blue)](https://caesaraugustus27.github.io/Augustus/form-engine/database/)
 
 </div>
 
@@ -15,11 +16,14 @@
 ## Overview
 
 A form is a map of named controls plus two lists that set their order on screen. The engine renders the controls,
-holds their state, loads initial data through a mapping DSL, runs three stages of validation, and lets one control's
-value change another control's visibility, requirement or content.
+holds their state, runs three stages of validation, and lets one control's value change another control's visibility,
+requirement or content. `initData` supplies the initial values, and every action receives a `FormResultData` with the
+current and initial value of each control.
 
-Saving is ordinary `OctaviusClient` code. Every form action receives a `FormResultData` with the current and initial
-value of each control.
+The engine has two modules. `core` is all of the above and knows no database. `database` adds what a form backed by
+PostgreSQL needs. `DatabaseFormDataManager` loads the record through a mapping DSL and runs the `TransactionPlan` an
+action returns in one transaction. `DatabaseControl` picks a row from a query. A form that writes no database, such as
+a settings form, needs only `core`.
 
 ## Control types
 
@@ -28,11 +32,12 @@ value of each control.
 | Primitive  | `control.type.primitive`  | `StringControl`, `MultilineStringControl`, `CheckboxControl`, `SwitchControl`, `FilePickerControl` |
 | Number     | `control.type.number`     | `IntegerControl`, `DoubleControl`, `BigDecimalControl`                                             |
 | Date, time | `control.type.datetime`   | `DateTimeControl`, `IntervalControl`                                                               |
-| Selection  | `control.type.selection`  | `EnumControl`, `DatabaseControl`, `RadioGroupControl`, `CheckboxGroupControl`                      |
+| Selection  | `control.type.selection`  | `EnumControl`, `RadioGroupControl`, `CheckboxGroupControl`                                         |
 | Collection | `control.type.collection` | `StringListControl`                                                                                |
 | Container  | `control.type.container`  | `SectionControl`                                                                                   |
 | Repeatable | `control.type.repeatable` | `RepeatableControl`                                                                                |
 | Button     | `control.type.button`     | `ButtonControl`                                                                                    |
+| Database   | `database`                | `DatabaseControl` (in the `database` module)                                                       |
 
 `DateTimeControl<T>` works through a `DateTimeAdapter<T>`. The functions `DateControl`, `LocalDateTimeControl`,
 `LocalTimeControl` and `InstantControl` create it for the usual types.
@@ -91,7 +96,7 @@ A control missing from both order lists is not rendered but still holds a value,
 ### 2. Implement the data manager
 
 ```kotlin
-class BookFormDataManager : FormDataManager() {
+class BookFormDataManager : DatabaseFormDataManager() {
 
     override fun initData(payload: Map<String, Any?>): Map<String, Any?>? {
         return loadData(payload["id"]) {
@@ -104,11 +109,15 @@ class BookFormDataManager : FormDataManager() {
         }
     }
 
-    override fun definedFormActions(): Map<String, (FormResultData) -> Boolean> = mapOf(
-        "save" to { formData -> processSave(formData) }
+    override fun definedFormPlans(): Map<String, (FormResultData) -> TransactionPlan> = mapOf(
+        "save" to { formData -> planSave(formData) }
     )
 
-    private fun processSave(formResultData: FormResultData): Boolean {
+    override fun constraintErrors() = mapOf(
+        "books_title_key" to ConstraintError.Field("title", "A book with this title already exists")
+    )
+
+    private fun planSave(formResultData: FormResultData): TransactionPlan {
         val loadedId = formResultData.getInitial("id")
         val params = mapOf(
             "title" to formResultData.getCurrent("title"),
@@ -117,25 +126,29 @@ class BookFormDataManager : FormDataManager() {
             "status" to formResultData.getCurrent("status")
         )
 
-        try {
+        return TransactionPlan().apply {
             if (loadedId != null) {
-                db.update("books").setValues(params).where("id = @id").executeUpdate(params + ("id" to loadedId))
+                update("books").setValues(params).where("id = @id").asStep().executeUpdate(params + ("id" to loadedId))
             } else {
-                db.insertInto("books").values(params).executeUpdate(params)
+                insertInto("books").values(params).asStep().executeUpdate(params)
             }
-        } catch (e: ConstraintViolationException) {
-            if (e.constraint != "books_title_key") throw e
-            errorManager.setFieldErrors("title", listOf("A book with this title already exists"))
-            return false
         }
-        return true
     }
 }
 ```
 
-An action reports failure by returning `false` and shows the error itself. The failure a save expects is a constraint
-violation: the action catches `ConstraintViolationException` for the constraint it knows, by `constraint` name, and
-turns it into an error in `errorManager`. Anything else it lets throw (see [Actions and paths](#actions-and-paths)).
+An action returns the plan of what to write and runs nothing itself. The manager runs the plan in one transaction, and
+the action succeeds. An empty plan succeeds without opening a transaction, which suits deleting a record that was never
+saved.
+
+The failure a save expects is a constraint violation. `constraintErrors` names the constraints the form knows. Violating
+one rolls the transaction back, fails the action and shows the mapped error: `ConstraintError.Field` under the control
+at its path, `ConstraintError.Global` above the form. Any other exception goes to the error dialog (see
+[Actions and paths](#actions-and-paths)).
+
+A form that writes no database extends `FormDataManager` and returns its actions from `definedFormActions`. Each one
+returns `false` on failure and shows the error itself in `errorManager`. Overriding `definedFormActions` in a
+`DatabaseFormDataManager` replaces the plans, for a form that loads from the database and saves elsewhere.
 
 `getCurrent` and `getInitial` read a value by path. `getCurrentAs<T>` and `getInitialAs<T>` also cast it. All four throw
 `FormResultException` with the path when no control lies at the path or the path goes through a control that is not a
@@ -173,7 +186,7 @@ closes in the meantime.
 
 ## Loading data
 
-`loadData` maps controls to columns and runs one query:
+`loadData` of `DatabaseFormDataManager` maps controls to columns and runs one query:
 
 ```kotlin
 override fun initData(payload: Map<String, Any?>): Map<String, Any?>? {
@@ -327,8 +340,8 @@ can have no rows. A value the control does not accept also throws, under the sam
 Sections, repeatable lists and buttons accept no value this way.
 
 An exception from an action, or from a coroutine it launches in `coroutineScope`, ends in the global error dialog and the
-window stays open. An expected failure, such as a constraint violation, the action catches itself and reports through
-`errorManager` and `false`.
+window stays open. An expected failure the action reports through `errorManager` and `false`, and a plan action through
+`constraintErrors`.
 
 ## Sections
 
@@ -421,52 +434,62 @@ class BookFormValidator : FormValidator() {
 }
 ```
 
-A rule the database can hold, such as a unique name, belongs in a constraint, and the action catches its violation (see
+A rule the database can hold, such as a unique name, belongs in a constraint listed in `constraintErrors` (see
 [the data manager](#2-implement-the-data-manager)). A query here would only repeat the constraint.
 
-`FormValidator` provides `db`, `errorManager`, `formState` and `formSchema`. Field and format errors from `ErrorManager`
-appear under the control, and global errors in a card above the form.
+`FormValidator` provides `errorManager`, `formState` and `formSchema`. A validator that queries the database injects
+`OctaviusClient` from Koin. Field and format errors from `ErrorManager` appear under the control, and global errors in a
+card above the form.
 
 ## Localization
 
-The engine's strings are in `src/commonMain/resources/i18n/{en,pl}.json`, which
+The engine's strings are in `core/src/commonMain/resources/i18n/{en,pl}.json`, which
 [Octavius I18n](https://github.com/Octavius-Framework/octavius-i18n) compiles into
-`io.github.octaviusframework.form.localization.FormTr`. Strings shared with the rest of the UI come from `Tr` in
-`ui-core`.
+`io.github.octaviusframework.form.localization.FormTr`. `database` has its own in
+`io.github.octaviusframework.form.database.localization.FormDatabaseTr`. Strings shared with the rest of the UI come from
+`Tr` in `ui-core`.
 
 ## Source layout
 
 ```
 form-engine/
-├── component/
-│   ├── FormSchema.kt          # FormSchema, FormSchemaBuilder
-│   ├── FormState.kt           # Per-control state keyed by path, FormLoadState
-│   ├── FormHandler.kt         # Loads data, validates, runs actions
-│   ├── FormActionTrigger.kt   # triggerAction
-│   ├── FormView.kt            # Composable with the content and the action bar
-│   ├── FormDataManager.kt     # initData, definedFormActions
-│   ├── FormLoader.kt          # loadData DSL
-│   ├── FormValidator.kt       # Business-rule and action validation
-│   ├── ErrorManager.kt        # Global, field and format errors
-│   ├── PathResolver.kt        # Relative paths and wildcards
-│   ├── InitDataException.kt   # initData does not fit the schema
-│   └── FormResultException.kt # A value cannot be read from FormResultData
+├── core/
+│   ├── component/
+│   │   ├── FormSchema.kt          # FormSchema, FormSchemaBuilder
+│   │   ├── FormState.kt           # Per-control state keyed by path, FormLoadState
+│   │   ├── FormHandler.kt         # Loads data, validates, runs actions
+│   │   ├── FormActionTrigger.kt   # triggerAction
+│   │   ├── FormView.kt            # Composable with the content and the action bar
+│   │   ├── FormDataManager.kt     # initData, definedFormActions
+│   │   ├── FormValidator.kt       # Business-rule and action validation
+│   │   ├── ErrorManager.kt        # Global, field and format errors
+│   │   ├── PathResolver.kt        # Relative paths and wildcards
+│   │   ├── InitDataException.kt   # initData does not fit the schema
+│   │   └── FormResultException.kt # A value cannot be read from FormResultData
+│   │
+│   ├── control/
+│   │   ├── base/                  # Control, ControlAction, ControlData, Dependencies, ValidationOptions
+│   │   ├── type/                  # One package per control category
+│   │   ├── validator/             # ControlValidator implementations
+│   │   └── layout/                # Rendering of sections, repeatable rows and labels
+│   │
+│   └── resources/i18n/            # en and pl translations
 │
-├── control/
-│   ├── base/                  # Control, ControlAction, ControlData, Dependencies, ValidationOptions
-│   ├── type/                  # One package per control category
-│   ├── validator/             # ControlValidator implementations
-│   └── layout/                # Rendering of sections, repeatable rows and labels
-│
-└── resources/i18n/            # en and pl translations
+└── database/
+    ├── DatabaseFormDataManager.kt # loadData, definedFormPlans, constraintErrors
+    ├── ConstraintError.kt         # Field and global errors for a violated constraint
+    ├── FormLoader.kt              # loadData DSL
+    ├── DatabaseControl.kt         # Dropdown over a query
+    └── resources/i18n/            # en and pl translations
 ```
 
-The module targets the desktop JVM. It depends on `ui-core` for the theme, dialogs and snackbars, on
-[Octavius for PostgreSQL](https://github.com/Octavius-Framework/octavius-postgresql) for `OctaviusClient`, which it gets
-through Koin, and on Octavius I18n for translations.
+Both modules target the desktop JVM. `core` depends on `ui-core` for the theme, dialogs and snackbars, and on Octavius
+I18n for translations. `database` depends on `core`, on
+[Octavius for PostgreSQL](https://github.com/Octavius-Framework/octavius-postgresql) for `OctaviusClient` and
+`TransactionPlan`, and on Koin, through which it gets the client.
 
 The tests need no database:
 
 ```bash
-./gradlew :form-engine:desktopTest
+./gradlew :form-engine:core:desktopTest :form-engine:database:desktopTest
 ```

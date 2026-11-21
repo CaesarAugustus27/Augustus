@@ -62,8 +62,8 @@ in the console and in `desktop-app/logs/octavius.log`.
 Other commands:
 
 ```bash
-./gradlew :form-engine:desktopTest # tests
-./gradlew dokkaGenerateHtml        # KDoc, into build/dokka/html
+./gradlew :form-engine:core:desktopTest :form-engine:database:desktopTest # tests
+./gradlew dokkaGenerateHtml                                               # KDoc, into build/dokka/html
 ```
 
 ## Project layout
@@ -73,6 +73,8 @@ Augustus/
 ├── desktop-app/             # Entry point: settings, migrations, main window
 │
 ├── form-engine/             # Forms
+│   ├── core/                # Schema, state, controls, validation, actions
+│   └── database/            # Forms backed by PostgreSQL: loading, plans, DatabaseControl
 ├── report-engine/           # Tables
 ├── ui-core/                 # Theme, dialogs, snackbars, shared components
 ├── navigation/              # Tabs and screen stacks

@@ -1,13 +1,14 @@
 package org.octavius.modules.games.form.category
 
-import io.github.octaviusframework.driver.exception.ConstraintViolationException
-import io.github.octaviusframework.form.component.FormDataManager
+import io.github.octaviusframework.client.transaction.TransactionPlan
 import io.github.octaviusframework.form.control.base.FormResultData
 import io.github.octaviusframework.form.control.base.getCurrent
 import io.github.octaviusframework.form.control.base.getInitial
+import io.github.octaviusframework.form.database.ConstraintError
+import io.github.octaviusframework.form.database.DatabaseFormDataManager
 import org.octavius.modules.games.localization.GamesTr
 
-class GameCategoryDataManager : FormDataManager() {
+class GameCategoryDataManager : DatabaseFormDataManager() {
 
     private fun loadData(loadedId: Any?) = loadData(loadedId) {
         from("games.categories", "ctg")
@@ -22,27 +23,26 @@ class GameCategoryDataManager : FormDataManager() {
         return loadedData + payload
     }
 
-    override fun definedFormActions(): Map<String, (FormResultData) -> Boolean> {
+    override fun definedFormPlans(): Map<String, (FormResultData) -> TransactionPlan> {
         return mapOf(
-            "save" to { formData -> processSave(formData) }
+            "save" to { formData -> planSave(formData) }
         )
     }
 
-    private fun processSave(formResultData: FormResultData): Boolean {
+    override fun constraintErrors() = mapOf(
+        "categories_name_key" to ConstraintError.Field("name", GamesTr.Validation.nameExists())
+    )
+
+    private fun planSave(formResultData: FormResultData): TransactionPlan {
         val loadedId = formResultData.getInitial("id")
         val params = mapOf("name" to formResultData.getCurrent("name"))
-        try {
+        return TransactionPlan().apply {
             if (loadedId != null) {
-                db.update("games.categories").setValue("name").where("id = @id")
+                update("games.categories").setValue("name").where("id = @id").asStep()
                     .executeUpdate(params + ("id" to loadedId))
             } else {
-                db.insertInto("games.categories").value("name").executeUpdate(params)
+                insertInto("games.categories").value("name").asStep().executeUpdate(params)
             }
-        } catch (e: ConstraintViolationException) {
-            if (e.constraint != "categories_name_key") throw e
-            errorManager.setFieldErrors("name", listOf(GamesTr.Validation.nameExists()))
-            return false
         }
-        return true
     }
 }

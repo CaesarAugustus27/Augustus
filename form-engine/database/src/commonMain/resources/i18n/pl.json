@@ -1,0 +1,5 @@
+{
+  "load": {
+    "notFound": "Nie znaleziono rekordu o id {id}. Mógł zostać usunięty."
+  }
+}

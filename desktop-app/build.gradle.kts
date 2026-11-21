@@ -29,7 +29,7 @@ kotlin {
             implementation(libs.classgraph)
             implementation(libs.hikaricp)
             implementation(projects.featureContract)
-            implementation(projects.formEngine)
+            implementation(projects.formEngine.core)
             implementation(projects.reportEngine)
             // Wszystkie featury, które settings.gradle.kts dołączył do builda. Aplikacja znajduje je
             // w czasie działania (FeatureDiscovery), więc nie importuje żadnego z nazwy.

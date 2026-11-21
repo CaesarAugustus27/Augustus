@@ -1,12 +1,18 @@
 package org.octavius.modules.asian.form
 
+import io.github.octaviusframework.client.OctaviusClient
 import io.github.octaviusframework.form.component.FormValidator
 import io.github.octaviusframework.form.control.base.FormResultData
 import io.github.octaviusframework.form.control.base.getCurrentAs
 import io.github.octaviusframework.form.control.base.getInitial
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 import org.octavius.modules.asian.localization.AsianMediaTr
 
-class AsianMediaValidator: FormValidator() {
+class AsianMediaValidator: FormValidator(), KoinComponent {
+
+    private val db: OctaviusClient by inject()
+
     override fun validateBusinessRules(formResultData: FormResultData): Boolean {
         return validateTitleDuplication(formResultData)
     }

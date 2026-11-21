@@ -3,19 +3,19 @@ package org.octavius.feature.books.form.book
 import io.github.octaviusframework.client.transaction.TransactionPlan
 import io.github.octaviusframework.client.transaction.TransactionValue
 import io.github.octaviusframework.client.transaction.toTransactionValue
-import io.github.octaviusframework.driver.exception.ConstraintViolationException
 import io.github.octaviusframework.driver.type.PgStandardType
 import io.github.octaviusframework.driver.type.withPgType
 import org.octavius.feature.books.localization.BooksTr
-import io.github.octaviusframework.form.component.FormDataManager
 import io.github.octaviusframework.form.control.base.FormResultData
 import io.github.octaviusframework.form.control.base.getCurrent
 import io.github.octaviusframework.form.control.base.getCurrentAs
 import io.github.octaviusframework.form.control.base.getInitial
 import io.github.octaviusframework.form.control.base.getInitialAs
 import io.github.octaviusframework.form.control.type.repeatable.RepeatableResultValue
+import io.github.octaviusframework.form.database.ConstraintError
+import io.github.octaviusframework.form.database.DatabaseFormDataManager
 
-class BookFormDataManager : FormDataManager() {
+class BookFormDataManager : DatabaseFormDataManager() {
 
     private fun loadBookData(loadedId: Any?) = loadData(loadedId) {
         from("books.books", "b")
@@ -48,17 +48,21 @@ class BookFormDataManager : FormDataManager() {
         return defaultData + loadedData + payload
     }
 
-    override fun definedFormActions(): Map<String, (FormResultData) -> Boolean> {
+    override fun definedFormPlans(): Map<String, (FormResultData) -> TransactionPlan> {
         return mapOf(
-            "save" to { formData -> processSave(formData) },
-            "delete" to { formData -> processDelete(formData) }
+            "save" to { formData -> planSave(formData) },
+            "delete" to { formData -> planDelete(formData) }
         )
     }
 
-    private fun processSave(formResultData: FormResultData): Boolean {
+    override fun constraintErrors() = mapOf(
+        "books_title_pl_key" to ConstraintError.Field("basic_info/title_pl", BooksTr.Validation.titleExists())
+    )
+
+    private fun planSave(formResultData: FormResultData): TransactionPlan {
         val loadedId = formResultData.getInitial("id")
 
-        val plan = TransactionPlan().apply {
+        return TransactionPlan().apply {
             // =================================================================================
             // KROK 1: Główna encja 'books'
             // =================================================================================
@@ -131,26 +135,16 @@ class BookFormDataManager : FormDataManager() {
                     )
             }
         }
-
-        try {
-            db.executeTransactionPlan(plan)
-        } catch (e: ConstraintViolationException) {
-            if (e.constraint != "books_title_pl_key") throw e
-            errorManager.setFieldErrors("basic_info/title_pl", listOf(BooksTr.Validation.titleExists()))
-            return false
-        }
-        return true
     }
 
-    private fun processDelete(formResultData: FormResultData): Boolean {
-        // Brak id oznacza, ze nie ma czego usuwac - nie jest to blad, wiec formularz
-        // ma sie normalnie zamknac. Przycisk usuwania i tak jest ukryty gdy id == null.
-        val loadedId = formResultData.getInitial("id") ?: return true
+    private fun planDelete(formResultData: FormResultData): TransactionPlan {
+        // Brak id oznacza, ze nie ma czego usuwac - nie jest to blad, wiec pusty plan konczy sie sukcesem
+        // i formularz normalnie sie zamyka. Przycisk usuwania i tak jest ukryty gdy id == null.
+        val loadedId = formResultData.getInitial("id") ?: return TransactionPlan()
 
         // CASCADE usunie powiązania w book_to_authors
-        db.deleteFrom("books.books")
-            .where("id = @id")
-            .executeUpdate(mapOf("id" to loadedId))
-        return true
+        return TransactionPlan().apply {
+            deleteFrom("books.books").where("id = @id").asStep().executeUpdate("id" to loadedId)
+        }
     }
 }

@@ -4,19 +4,19 @@ import io.github.octaviusframework.client.transaction.TransactionPlan
 import io.github.octaviusframework.client.transaction.TransactionValue
 import io.github.octaviusframework.client.transaction.toTransactionValue
 import io.github.octaviusframework.driver.type.PgStandardType
-import io.github.octaviusframework.driver.exception.ConstraintViolationException
 import io.github.octaviusframework.driver.type.withPgType
 import org.octavius.domain.game.GameStatus
-import io.github.octaviusframework.form.component.FormDataManager
 import io.github.octaviusframework.form.control.base.FormResultData
 import io.github.octaviusframework.form.control.base.getCurrent
 import io.github.octaviusframework.form.control.base.getCurrentAs
 import io.github.octaviusframework.form.control.base.getInitial
 import io.github.octaviusframework.form.control.base.getInitialAs
 import io.github.octaviusframework.form.control.type.repeatable.RepeatableResultValue
+import io.github.octaviusframework.form.database.ConstraintError
+import io.github.octaviusframework.form.database.DatabaseFormDataManager
 import org.octavius.modules.games.localization.GamesTr
 
-class GameFormDataManager : FormDataManager() {
+class GameFormDataManager : DatabaseFormDataManager() {
 
     private fun loadGameData(loadedId: Any?) = loadData(loadedId) {
         from("games", "g")
@@ -84,27 +84,28 @@ class GameFormDataManager : FormDataManager() {
         return defaultData + loadedData + payload
     }
 
-    override fun definedFormActions(): Map<String, (FormResultData) -> Boolean> {
+    override fun definedFormPlans(): Map<String, (FormResultData) -> TransactionPlan> {
         return mapOf(
-            "save" to { formData -> processSave(formData) },
-            "delete" to { formData -> processDelete(formData) /* Istnienie ID zapewnia logika ukrywania przycisku */ }
+            "save" to { formData -> planSave(formData) },
+            "delete" to { formData -> planDelete(formData) /* Istnienie ID zapewnia logika ukrywania przycisku */ }
         )
     }
 
-    fun processDelete(formResultData: FormResultData): Boolean {
+    override fun constraintErrors() = mapOf(
+        "games_name_key" to ConstraintError.Field("basic_info/name", GamesTr.Validation.nameExists())
+    )
+
+    fun planDelete(formResultData: FormResultData): TransactionPlan {
         // Wykorzystanie CASCADE
-        val plan = TransactionPlan().apply {
+        return TransactionPlan().apply {
             deleteFrom("games.games")
                 .where("id = @id")
                 .asStep()
                 .executeUpdate("id" to formResultData.getInitial("id"))
         }
-
-        db.executeTransactionPlan(plan)
-        return true
     }
 
-    fun processSave(formResultData: FormResultData): Boolean {
+    fun planSave(formResultData: FormResultData): TransactionPlan {
         val plan = TransactionPlan()
         val statusesWithDetails = listOf(GameStatus.WithoutTheEnd, GameStatus.Playing, GameStatus.Played)
         val loadedId = formResultData.getInitialAs<Int?>("id")
@@ -218,15 +219,7 @@ class GameFormDataManager : FormDataManager() {
                 .asStep().executeUpdate("ids_to_insert" to insertedCategories.withPgType(PgStandardType.INT4_ARRAY), "game_id" to gameIdRef)
         }
 
-        // Wykonanie całego planu
-        try {
-            db.executeTransactionPlan(plan)
-        } catch (e: ConstraintViolationException) {
-            if (e.constraint != "games_name_key") throw e
-            errorManager.setFieldErrors("basic_info/name", listOf(GamesTr.Validation.nameExists()))
-            return false
-        }
-        return true
+        return plan
     }
 
     /**

@@ -1,6 +1,6 @@
 package org.octavius.modules.sandbox.form.nested
 
-import io.github.octaviusframework.form.component.FormDataManager
+import io.github.octaviusframework.form.database.DatabaseFormDataManager
 import io.github.octaviusframework.form.control.base.FormResultData
 import io.github.octaviusframework.form.control.base.getCurrentAs
 import io.github.octaviusframework.form.control.type.repeatable.RepeatableResultValue
@@ -12,7 +12,7 @@ import org.octavius.ui.snackbar.SnackbarManager
  * poziom to podzapytanie na `generate_series`. Kohorta `c` ma `c` centurii, a centuria `n` ma `n - 1`
  * kontuberniów, więc pierwsza centuria każdej kohorty wraca z pustą listą.
  */
-class SandboxNestedFormDataManager : FormDataManager() {
+class SandboxNestedFormDataManager : DatabaseFormDataManager() {
 
     override fun initData(payload: Map<String, Any?>): Map<String, Any?>? = loadData(1) {
         from("(SELECT 1 AS id, 'Legio X Gemina' AS legion)", "s")

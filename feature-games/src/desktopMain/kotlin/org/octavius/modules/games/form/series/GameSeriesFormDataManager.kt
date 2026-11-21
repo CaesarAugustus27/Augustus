@@ -1,14 +1,14 @@
 package org.octavius.modules.games.form.series
 
 import io.github.octaviusframework.client.transaction.TransactionPlan
-import io.github.octaviusframework.driver.exception.ConstraintViolationException
-import io.github.octaviusframework.form.component.FormDataManager
 import io.github.octaviusframework.form.control.base.FormResultData
 import io.github.octaviusframework.form.control.base.getCurrent
 import io.github.octaviusframework.form.control.base.getInitial
+import io.github.octaviusframework.form.database.ConstraintError
+import io.github.octaviusframework.form.database.DatabaseFormDataManager
 import org.octavius.modules.games.localization.GamesTr
 
-class GameSeriesFormDataManager : FormDataManager() {
+class GameSeriesFormDataManager : DatabaseFormDataManager() {
     private fun loadData(loadedId: Any?) = loadData(loadedId) {
         from("games.series", "s")
         map("id")
@@ -22,16 +22,20 @@ class GameSeriesFormDataManager : FormDataManager() {
         return loadedData + payload
     }
 
-    override fun definedFormActions(): Map<String, (FormResultData) -> Boolean> {
+    override fun definedFormPlans(): Map<String, (FormResultData) -> TransactionPlan> {
         return mapOf(
-            "save" to { formData -> processSave(formData) }
+            "save" to { formData -> planSave(formData) }
         )
     }
 
-    private fun processSave(formResultData: FormResultData): Boolean {
+    override fun constraintErrors() = mapOf(
+        "series_name_key" to ConstraintError.Field("basic_info/name", GamesTr.Validation.duplicatedSeries())
+    )
+
+    private fun planSave(formResultData: FormResultData): TransactionPlan {
         val loadedId = formResultData.getInitial("id")
         val name = formResultData.getCurrent("basic_info/name")
-        val plan = TransactionPlan().apply {
+        return TransactionPlan().apply {
             if (loadedId != null) {
                 update("games.series").setValues(listOf("name")).where("id = @id").asStep()
                     .executeUpdate("name" to name, "id" to loadedId)
@@ -39,13 +43,5 @@ class GameSeriesFormDataManager : FormDataManager() {
                 insertInto("games.series").values(listOf("name")).asStep().executeUpdate("name" to name)
             }
         }
-        try {
-            db.executeTransactionPlan(plan)
-        } catch (e: ConstraintViolationException) {
-            if (e.constraint != "series_name_key") throw e
-            errorManager.setFieldErrors("basic_info/name", listOf(GamesTr.Validation.duplicatedSeries()))
-            return false
-        }
-        return true
     }
 }

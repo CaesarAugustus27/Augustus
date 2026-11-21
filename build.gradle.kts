@@ -25,7 +25,8 @@ dependencies {
     dokka(projects.sharedContract)
     dokka(projects.uiCore)
     dokka(projects.desktopApp)
-    dokka(projects.formEngine)
+    dokka(projects.formEngine.core)
+    dokka(projects.formEngine.database)
     dokka(projects.reportEngine)
     dokka(projects.featureAsianMedia)
     dokka(projects.featureGames)
@@ -38,7 +39,7 @@ dependencies {
 
 // Aplikujemy plugin Dokka do wszystkich subprojektów z kodem Kotlin
 subprojects {
-    val excludedModules = setOf("browser-extension", "buildSrc")
+    val excludedModules = setOf("browser-extension", "form-engine", "buildSrc")
     if (name !in excludedModules) {
         apply(plugin = "org.jetbrains.dokka")
 

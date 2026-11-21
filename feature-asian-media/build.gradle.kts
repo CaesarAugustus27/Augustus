@@ -32,7 +32,8 @@ kotlin {
             implementation(composeLibs.components.resources)
             implementation(libs.kotlinx.coroutines.core)
 
-            implementation(projects.formEngine)
+            implementation(projects.formEngine.core)
+            implementation(projects.formEngine.database)
             implementation(projects.reportEngine)
             implementation(projects.featureContract)
             implementation(project.dependencies.platform(libs.koin.bom))

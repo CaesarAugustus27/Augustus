@@ -37,7 +37,8 @@ dependencyResolutionManagement {
 
 include(
     ":desktop-app",
-    ":form-engine",
+    ":form-engine:core",
+    ":form-engine:database",
     ":report-engine",
     ":api-server",
     ":ui-core",

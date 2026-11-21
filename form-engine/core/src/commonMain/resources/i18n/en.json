@@ -1,0 +1,61 @@
+{
+  "form": {
+    "actions": {
+      "containsErrors": "Form contains errors",
+      "errorsLabel": "Errors:",
+      "itemLabel": "Item {position}"
+    },
+    "dropdown": {
+      "loading": "Loading...",
+      "noResults": "No results",
+      "noSelection": "No selection",
+      "selectOption": "Select option"
+    },
+    "filePicker": {
+      "chooseFile": "Choose file",
+      "dragOrClick": "Drag and drop a file or click the button",
+      "dropHere": "Drop the file here",
+      "file": "File",
+      "loadedBytes": {
+        "$plural": "count",
+        "one": "File loaded ({count} byte)",
+        "other": "File loaded ({count} bytes)"
+      }
+    },
+    "load": {
+      "failed": "Could not load the form"
+    },
+    "stringList": {
+      "itemPlaceholder": "Enter text..."
+    }
+  },
+  "validation": {
+    "duplicateInRow": "Duplicate value in row {row}",
+    "fieldRequired": "This field is required",
+    "invalidFormat": "Invalid format",
+    "invalidNumberFormat": "Invalid number format",
+    "itemMaxLength": "Item {item}: Maximum length is {max} characters",
+    "itemMinLength": "Item {item}: Minimum length is {min} characters",
+    "itemPatternError": "Item {item}: {message}",
+    "maxDecimalPlaces": "Maximum {places} decimal places",
+    "maxInterval": "Interval must be shorter than {max}",
+    "maxItems": "Maximum {max} items",
+    "maximumItems": {
+      "$plural": "count",
+      "one": "Maximum {count} item",
+      "other": "Maximum {count} items"
+    },
+    "maxLength": "Maximum length is {max} characters",
+    "maxValue": "Value must be less than or equal to {max}",
+    "minInterval": "Interval must be longer than {min}",
+    "minItems": "Minimum {min} items required",
+    "minimumItems": {
+      "$plural": "count",
+      "one": "Minimum {count} item required",
+      "other": "Minimum {count} items required"
+    },
+    "minLength": "Minimum length is {min} characters",
+    "minValue": "Value must be greater than or equal to {min}",
+    "multipleOf": "Value must be a multiple of {step}"
+  }
+}

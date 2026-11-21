@@ -1,0 +1,67 @@
+{
+  "form": {
+    "actions": {
+      "containsErrors": "Formularz zawiera błędy",
+      "errorsLabel": "Błędy:",
+      "itemLabel": "Element {position}"
+    },
+    "dropdown": {
+      "loading": "Wczytywanie...",
+      "noResults": "Brak wyników",
+      "noSelection": "Brak wyboru",
+      "selectOption": "Wybierz opcję"
+    },
+    "filePicker": {
+      "chooseFile": "Wybierz plik",
+      "dragOrClick": "Przeciągnij i upuść plik lub kliknij przycisk",
+      "dropHere": "Upuść plik tutaj",
+      "file": "Plik",
+      "loadedBytes": {
+        "$plural": "count",
+        "one": "Załadowano plik ({count} bajt)",
+        "few": "Załadowano plik ({count} bajty)",
+        "many": "Załadowano plik ({count} bajtów)",
+        "other": "Załadowano plik ({count} bajta)"
+      }
+    },
+    "load": {
+      "failed": "Nie udało się wczytać formularza"
+    },
+    "stringList": {
+      "itemPlaceholder": "Wprowadź tekst..."
+    }
+  },
+  "validation": {
+    "duplicateInRow": "Duplikat wartości w wierszu {row}",
+    "fieldRequired": "To pole jest wymagane",
+    "invalidFormat": "Nieprawidłowy format",
+    "invalidNumberFormat": "Nieprawidłowy format liczby",
+    "itemMaxLength": "Element {item}: Maksymalna długość to {max} znaków",
+    "itemMinLength": "Element {item}: Minimalna długość to {min} znaków",
+    "itemPatternError": "Element {item}: {message}",
+    "maxDecimalPlaces": "Maksymalnie {places} miejsc po przecinku",
+    "maxInterval": "Interwał musi być krótszy niż {max}",
+    "maxItems": "Maksymalnie {max} elementów",
+    "maximumItems": {
+      "$plural": "count",
+      "one": "Maksymalnie {count} element",
+      "few": "Maksymalnie {count} elementy",
+      "many": "Maksymalnie {count} elementów",
+      "other": "Maksymalnie {count} elementu"
+    },
+    "maxLength": "Maksymalna długość to {max} znaków",
+    "maxValue": "Wartość musi być mniejsza lub równa {max}",
+    "minInterval": "Interwał musi być dłuższy niż {min}",
+    "minItems": "Wymagane minimum {min} elementów",
+    "minimumItems": {
+      "$plural": "count",
+      "one": "Wymagany minimum {count} element",
+      "few": "Wymagane minimum {count} elementy",
+      "many": "Wymagane minimum {count} elementów",
+      "other": "Wymagane minimum {count} elementu"
+    },
+    "minLength": "Minimalna długość to {min} znaków",
+    "minValue": "Wartość musi być większa lub równa {min}",
+    "multipleOf": "Wartość musi być wielokrotnością {step}"
+  }
+}
