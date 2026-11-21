@@ -1,14 +1,11 @@
 package org.octavius.modules.games.form.game
 
-import io.github.octaviusframework.client.DataResult
-import io.github.octaviusframework.client.dbResult
 import io.github.octaviusframework.client.transaction.TransactionPlan
 import io.github.octaviusframework.client.transaction.TransactionValue
 import io.github.octaviusframework.client.transaction.toTransactionValue
 import io.github.octaviusframework.driver.type.PgStandardType
+import io.github.octaviusframework.driver.exception.ConstraintViolationException
 import io.github.octaviusframework.driver.type.withPgType
-import org.octavius.dialog.ErrorDialogConfig
-import org.octavius.dialog.GlobalDialogManager
 import org.octavius.domain.game.GameStatus
 import io.github.octaviusframework.form.component.FormDataManager
 import io.github.octaviusframework.form.control.base.FormResultData
@@ -17,6 +14,7 @@ import io.github.octaviusframework.form.control.base.getCurrentAs
 import io.github.octaviusframework.form.control.base.getInitial
 import io.github.octaviusframework.form.control.base.getInitialAs
 import io.github.octaviusframework.form.control.type.repeatable.RepeatableResultValue
+import org.octavius.modules.games.localization.GamesTr
 
 class GameFormDataManager : FormDataManager() {
 
@@ -102,13 +100,8 @@ class GameFormDataManager : FormDataManager() {
                 .executeUpdate("id" to formResultData.getInitial("id"))
         }
 
-        return when (val result = dbResult { db.executeTransactionPlan(plan) }) {
-            is DataResult.Failure -> {
-                GlobalDialogManager.show(ErrorDialogConfig(result.error))
-                false
-            }
-            is DataResult.Success -> true
-        }
+        db.executeTransactionPlan(plan)
+        return true
     }
 
     fun processSave(formResultData: FormResultData): Boolean {
@@ -226,14 +219,14 @@ class GameFormDataManager : FormDataManager() {
         }
 
         // Wykonanie całego planu
-        return when (val result = dbResult { db.executeTransactionPlan(plan) }) {
-            is DataResult.Failure -> {
-                GlobalDialogManager.show(ErrorDialogConfig(result.error))
-                false
-            }
-
-            is DataResult.Success -> true
+        try {
+            db.executeTransactionPlan(plan)
+        } catch (e: ConstraintViolationException) {
+            if (e.constraint != "games_name_key") throw e
+            errorManager.setFieldErrors("basic_info/name", listOf(GamesTr.Validation.nameExists()))
+            return false
         }
+        return true
     }
 
     /**

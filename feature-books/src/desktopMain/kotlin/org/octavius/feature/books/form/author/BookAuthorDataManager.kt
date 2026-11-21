@@ -1,12 +1,11 @@
 package org.octavius.feature.books.form.author
 
-import io.github.octaviusframework.client.DataResult
-import org.octavius.dialog.ErrorDialogConfig
-import org.octavius.dialog.GlobalDialogManager
+import io.github.octaviusframework.driver.exception.ConstraintViolationException
 import io.github.octaviusframework.form.component.FormDataManager
 import io.github.octaviusframework.form.control.base.FormResultData
 import io.github.octaviusframework.form.control.base.getCurrent
 import io.github.octaviusframework.form.control.base.getInitial
+import org.octavius.feature.books.localization.BooksTr
 
 class BookAuthorDataManager : FormDataManager() {
 
@@ -38,24 +37,23 @@ class BookAuthorDataManager : FormDataManager() {
             "sort_name" to formResultData.getCurrent("sort_name")
         )
 
-        val result = if (loadedId != null) {
-            db.update("books.authors")
-                .setValues(params)
-                .where("id = @id")
-                .asResult().executeUpdate(params + ("id" to loadedId))
-        } else {
-            db.insertInto("books.authors")
-                .values(params)
-                .asResult().executeUpdate(params)
-        }
-
-        return when (result) {
-            is DataResult.Failure -> {
-                GlobalDialogManager.show(ErrorDialogConfig(result.error))
-                false
+        try {
+            if (loadedId != null) {
+                db.update("books.authors")
+                    .setValues(params)
+                    .where("id = @id")
+                    .executeUpdate(params + ("id" to loadedId))
+            } else {
+                db.insertInto("books.authors")
+                    .values(params)
+                    .executeUpdate(params)
             }
-            is DataResult.Success<*> -> true
+        } catch (e: ConstraintViolationException) {
+            if (e.constraint != "authors_name_key") throw e
+            errorManager.setFieldErrors("name", listOf(BooksTr.Authors.Validation.nameExists()))
+            return false
         }
+        return true
     }
 
     private fun processDelete(formResultData: FormResultData): Boolean {
@@ -63,16 +61,16 @@ class BookAuthorDataManager : FormDataManager() {
         // ma sie normalnie zamknac. Przycisk usuwania i tak jest ukryty gdy id == null.
         val loadedId = formResultData.getInitial("id") ?: return true
 
-        val result = db.deleteFrom("books.authors")
-            .where("id = @id")
-            .asResult().executeUpdate(mapOf("id" to loadedId))
-
-        return when (result) {
-            is DataResult.Failure -> {
-                GlobalDialogManager.show(ErrorDialogConfig(result.error))
-                false
-            }
-            is DataResult.Success<*> -> true
+        // book_to_authors ma ON DELETE RESTRICT: autora z książkami baza nie usunie.
+        try {
+            db.deleteFrom("books.authors")
+                .where("id = @id")
+                .executeUpdate(mapOf("id" to loadedId))
+        } catch (e: ConstraintViolationException) {
+            if (e.constraint != "book_to_authors_author_id_fkey") throw e
+            errorManager.addGlobalError(BooksTr.Authors.Validation.hasBooks())
+            return false
         }
+        return true
     }
 }

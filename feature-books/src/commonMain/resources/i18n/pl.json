@@ -44,7 +44,8 @@
       "confirmDelete": "Czy na pewno chcesz usunąć tego autora?"
     },
     "validation": {
-      "nameExists": "Taki autor już istnieje"
+      "nameExists": "Taki autor już istnieje",
+      "hasBooks": "Autor ma przypisane książki, więc nie można go usunąć"
     },
     "report": {
       "title": "Autorzy",

@@ -1,14 +1,12 @@
 package org.octavius.feature.books.form.book
 
-import io.github.octaviusframework.client.DataResult
-import io.github.octaviusframework.client.dbResult
 import io.github.octaviusframework.client.transaction.TransactionPlan
 import io.github.octaviusframework.client.transaction.TransactionValue
 import io.github.octaviusframework.client.transaction.toTransactionValue
+import io.github.octaviusframework.driver.exception.ConstraintViolationException
 import io.github.octaviusframework.driver.type.PgStandardType
 import io.github.octaviusframework.driver.type.withPgType
-import org.octavius.dialog.ErrorDialogConfig
-import org.octavius.dialog.GlobalDialogManager
+import org.octavius.feature.books.localization.BooksTr
 import io.github.octaviusframework.form.component.FormDataManager
 import io.github.octaviusframework.form.control.base.FormResultData
 import io.github.octaviusframework.form.control.base.getCurrent
@@ -134,13 +132,14 @@ class BookFormDataManager : FormDataManager() {
             }
         }
 
-        return when (val result = dbResult { db.executeTransactionPlan(plan) }) {
-            is DataResult.Failure -> {
-                GlobalDialogManager.show(ErrorDialogConfig(result.error))
-                false
-            }
-            is DataResult.Success -> true
+        try {
+            db.executeTransactionPlan(plan)
+        } catch (e: ConstraintViolationException) {
+            if (e.constraint != "books_title_pl_key") throw e
+            errorManager.setFieldErrors("basic_info/title_pl", listOf(BooksTr.Validation.titleExists()))
+            return false
         }
+        return true
     }
 
     private fun processDelete(formResultData: FormResultData): Boolean {
@@ -149,16 +148,9 @@ class BookFormDataManager : FormDataManager() {
         val loadedId = formResultData.getInitial("id") ?: return true
 
         // CASCADE usunie powiązania w book_to_authors
-        val result = db.deleteFrom("books.books")
+        db.deleteFrom("books.books")
             .where("id = @id")
-            .asResult().executeUpdate(mapOf("id" to loadedId))
-
-        return when (result) {
-            is DataResult.Failure -> {
-                GlobalDialogManager.show(ErrorDialogConfig(result.error))
-                false
-            }
-            is DataResult.Success<*> -> true
-        }
+            .executeUpdate(mapOf("id" to loadedId))
+        return true
     }
 }

@@ -56,8 +56,9 @@ abstract class FormDataManager: KoinComponent {
     * The value is a lambda that receives the current form data and returns `true` if the operation
     * succeeded.
     *
-    * The lambda is responsible for showing the error (dialog, `errorManager`) on failure - `false`
-    * carries the fact of failure, not its content.
+    * The lambda shows the failures it expects, such as a caught `ConstraintViolationException`, in
+    * `errorManager` and returns `false`, which carries the fact of failure, not its content. Any other
+    * exception it lets through to the global error dialog.
     *
     * Actions that do not touch data do not belong here. Closing the screen is the business of the button in
     * the schema builder, not of the data layer.

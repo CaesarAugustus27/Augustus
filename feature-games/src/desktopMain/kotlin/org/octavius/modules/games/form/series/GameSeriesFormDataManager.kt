@@ -1,14 +1,12 @@
 package org.octavius.modules.games.form.series
 
-import io.github.octaviusframework.client.DataResult
-import io.github.octaviusframework.client.dbResult
 import io.github.octaviusframework.client.transaction.TransactionPlan
-import org.octavius.dialog.ErrorDialogConfig
-import org.octavius.dialog.GlobalDialogManager
+import io.github.octaviusframework.driver.exception.ConstraintViolationException
 import io.github.octaviusframework.form.component.FormDataManager
 import io.github.octaviusframework.form.control.base.FormResultData
 import io.github.octaviusframework.form.control.base.getCurrent
 import io.github.octaviusframework.form.control.base.getInitial
+import org.octavius.modules.games.localization.GamesTr
 
 class GameSeriesFormDataManager : FormDataManager() {
     private fun loadData(loadedId: Any?) = loadData(loadedId) {
@@ -41,13 +39,13 @@ class GameSeriesFormDataManager : FormDataManager() {
                 insertInto("games.series").values(listOf("name")).asStep().executeUpdate("name" to name)
             }
         }
-        return when (val result = dbResult { db.executeTransactionPlan(plan) }) {
-            is DataResult.Failure -> {
-                GlobalDialogManager.show(ErrorDialogConfig(result.error))
-                false
-            }
-
-            is DataResult.Success<*> -> true
+        try {
+            db.executeTransactionPlan(plan)
+        } catch (e: ConstraintViolationException) {
+            if (e.constraint != "series_name_key") throw e
+            errorManager.setFieldErrors("basic_info/name", listOf(GamesTr.Validation.duplicatedSeries()))
+            return false
         }
+        return true
     }
 }

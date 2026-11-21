@@ -1,12 +1,8 @@
 package org.octavius.modules.asian.form
 
-import io.github.octaviusframework.client.DataResult
-import io.github.octaviusframework.client.dbResult
 import io.github.octaviusframework.client.transaction.TransactionPlan
 import io.github.octaviusframework.client.transaction.TransactionValue
 import io.github.octaviusframework.client.transaction.toTransactionValue
-import org.octavius.dialog.ErrorDialogConfig
-import org.octavius.dialog.GlobalDialogManager
 import io.github.octaviusframework.form.component.FormDataManager
 import io.github.octaviusframework.form.control.base.FormResultData
 import io.github.octaviusframework.form.control.base.getCurrent
@@ -72,13 +68,8 @@ class AsianMediaFormDataManager : FormDataManager() {
                 .executeUpdate("id" to formResultData.getInitial("id"))
         }
 
-        return when (val result = dbResult { db.executeTransactionPlan(plan) }) {
-            is DataResult.Failure -> {
-                GlobalDialogManager.show(ErrorDialogConfig(result.error))
-                false
-            }
-            is DataResult.Success -> true
-        }
+        db.executeTransactionPlan(plan)
+        return true
     }
 
     fun processSave(formResultData: FormResultData): Boolean {
@@ -173,13 +164,8 @@ class AsianMediaFormDataManager : FormDataManager() {
         }
 
         // Wykonanie całego planu
-        return when (val result = dbResult { db.executeTransactionPlan(plan) }) {
-            is DataResult.Failure -> {
-                GlobalDialogManager.show(ErrorDialogConfig(result.error))
-                false
-            }
-            is DataResult.Success -> true
-        }
+        db.executeTransactionPlan(plan)
+        return true
     }
 
     private fun addPublicationVolumesUpdateOperation(

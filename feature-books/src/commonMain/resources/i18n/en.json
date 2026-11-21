@@ -44,7 +44,8 @@
       "confirmDelete": "Are you sure you want to delete this author?"
     },
     "validation": {
-      "nameExists": "Author already exists"
+      "nameExists": "Author already exists",
+      "hasBooks": "The author has books assigned, so they cannot be deleted"
     },
     "report": {
       "title": "Authors",

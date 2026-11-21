@@ -117,25 +117,25 @@ class BookFormDataManager : FormDataManager() {
             "status" to formResultData.getCurrent("status")
         )
 
-        val result = if (loadedId != null) {
-            db.update("books").setValues(params).where("id = @id")
-                .asResult().executeUpdate(params + ("id" to loadedId))
-        } else {
-            db.insertInto("books").values(params).asResult().executeUpdate(params)
-        }
-
-        return when (result) {
-            is DataResult.Success<*> -> true
-            is DataResult.Failure -> {
-                GlobalDialogManager.show(ErrorDialogConfig(result.error))
-                false
+        try {
+            if (loadedId != null) {
+                db.update("books").setValues(params).where("id = @id").executeUpdate(params + ("id" to loadedId))
+            } else {
+                db.insertInto("books").values(params).executeUpdate(params)
             }
+        } catch (e: ConstraintViolationException) {
+            if (e.constraint != "books_title_key") throw e
+            errorManager.setFieldErrors("title", listOf("A book with this title already exists"))
+            return false
         }
+        return true
     }
 }
 ```
 
-An action reports failure by returning `false` and shows the error itself.
+An action reports failure by returning `false` and shows the error itself. The failure a save expects is a constraint
+violation: the action catches `ConstraintViolationException` for the constraint it knows, by `constraint` name, and
+turns it into an error in `errorManager`. Anything else it lets throw (see [Actions and paths](#actions-and-paths)).
 
 `getCurrent` and `getInitial` read a value by path. `getCurrentAs<T>` and `getInitialAs<T>` also cast it. All four throw
 `FormResultException` with the path when no control lies at the path or the path goes through a control that is not a
@@ -327,7 +327,8 @@ can have no rows. A value the control does not accept also throws, under the sam
 Sections, repeatable lists and buttons accept no value this way.
 
 An exception from an action, or from a coroutine it launches in `coroutineScope`, ends in the global error dialog and the
-window stays open. Report expected failures through `DataResult`, your own dialog and `false`.
+window stays open. An expected failure, such as a constraint violation, the action catches itself and reports through
+`errorManager` and `false`.
 
 ## Sections
 
@@ -403,41 +404,25 @@ Validation runs in three stages, in this order. A failed stage shows a snackbar 
 2. **Business rules.** `FormValidator.validateBusinessRules(FormResultData)`, for checks that span several fields. Runs
    only with `validates = true`.
 3. **Action.** `FormValidator.defineActionValidations()`, keyed by the `actionKey` of `triggerAction`. Always runs for
-   that action, so it fits a check that matters on `save` and not on `delete`.
+   that action, also with `validates = false`, so it fits a check that matters for one action only.
 
 ```kotlin
-class GameCategoryValidator : FormValidator() {
+class BookFormValidator : FormValidator() {
 
     override fun defineActionValidations(): Map<String, (FormResultData) -> Boolean> = mapOf(
-        "save" to { result -> checkIfUnique(result) }
+        "delete" to { result -> checkNotBeingRead(result) }
     )
 
-    private fun checkIfUnique(result: FormResultData): Boolean {
-        val name = result.getCurrentAs<String>("name")
-        val id = result.getCurrent("id")
-        val params = mutableMapOf<String, Any?>("name" to name)
-
-        val builder = db.select("COUNT(*)").from("games.categories")
-        if (id != null) {
-            builder.where("id != @id AND name = @name")
-            params["id"] = id
-        } else {
-            builder.where("name = @name")
-        }
-
-        return when (val count = builder.asResult().fetchField<Long>(params)) {
-            is DataResult.Success -> if (count.value > 0) {
-                errorManager.setFieldErrors("name", listOf("Category already exists"))
-                false
-            } else true
-            is DataResult.Failure -> {
-                GlobalDialogManager.show(ErrorDialogConfig(count.error))
-                false
-            }
-        }
+    private fun checkNotBeingRead(result: FormResultData): Boolean {
+        if (result.getInitial("status") != ReadingStatus.Reading) return true
+        errorManager.addGlobalError("A book being read cannot be deleted")
+        return false
     }
 }
 ```
+
+A rule the database can hold, such as a unique name, belongs in a constraint, and the action catches its violation (see
+[the data manager](#2-implement-the-data-manager)). A query here would only repeat the constraint.
 
 `FormValidator` provides `db`, `errorManager`, `formState` and `formSchema`. Field and format errors from `ErrorManager`
 appear under the control, and global errors in a card above the form.

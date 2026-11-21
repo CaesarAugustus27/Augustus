@@ -4,7 +4,6 @@ import io.github.octaviusframework.form.component.FormHandler
 import io.github.octaviusframework.form.component.FormView
 import org.octavius.modules.games.form.category.GameCategoryDataManager
 import org.octavius.modules.games.form.category.GameCategorySchemaBuilder
-import org.octavius.modules.games.form.category.GameCategoryValidator
 import org.octavius.modules.games.localization.GamesTr
 import org.octavius.navigation.ComponentScreen
 import org.octavius.navigation.Screen
@@ -21,7 +20,6 @@ class GameCategoryFormScreen {
             val formHandler = FormHandler(
                 formSchemaBuilder = GameCategorySchemaBuilder(),
                 formDataManager = GameCategoryDataManager(),
-                formValidator = GameCategoryValidator(),
                 payload = mapOf("id" to entityId)
             )
             return ComponentScreen(title) { FormView(formHandler) }
