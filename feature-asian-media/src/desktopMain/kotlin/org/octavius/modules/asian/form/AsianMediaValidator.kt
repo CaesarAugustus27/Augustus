@@ -1,13 +1,9 @@
 package org.octavius.modules.asian.form
 
-import io.github.octaviusframework.client.DataResult
-import io.github.octaviusframework.client.query.join
-import io.github.octaviusframework.client.query.withParam
-import org.octavius.dialog.ErrorDialogConfig
-import org.octavius.dialog.GlobalDialogManager
 import io.github.octaviusframework.form.component.FormValidator
 import io.github.octaviusframework.form.control.base.FormResultData
 import io.github.octaviusframework.form.control.base.getCurrentAs
+import io.github.octaviusframework.form.control.base.getInitial
 import org.octavius.modules.asian.localization.AsianMediaTr
 
 class AsianMediaValidator: FormValidator() {
@@ -26,40 +22,29 @@ class AsianMediaValidator: FormValidator() {
         return !hasDuplicates
     }
 
-    fun validateTitlesAgainstDatabase(formResultData: FormResultData): Boolean {
-        val titles = formResultData.getCurrentAs<List<String>>("title_info/titles")
-        val id = formResultData.getCurrentAs<Int?>("id")
+    /**
+     * Nie pozwala dodać nowego rekordu z tytułem, który już jest w bazie. Zapisanego rekordu to nie dotyczy, bo
+     * różne dzieła bywają tak samo zatytułowane.
+     */
+    private fun validateNewTitlesAgainstDatabase(formResultData: FormResultData): Boolean {
+        if (formResultData.getInitial("id") != null) return true
 
+        val titles = formResultData.getCurrentAs<List<String>>("title_info/titles")
         if (titles.isEmpty()) return true
 
-        val whereClause = listOfNotNull(
-            "title = ANY(@titles)" withParam ("titles" to titles),
-            id?.let { "id != @id" withParam ("id" to id) }
-        ).join(separator = " AND ")
+        val count = db.select("COUNT(*)").fromSubquery("SELECT UNNEST(titles) AS title FROM titles")
+            .where("title = ANY(@titles)").fetchField<Long>("titles" to titles)
 
-        val result = db.select("COUNT(*)").fromSubquery("SELECT id, UNNEST(titles) AS title FROM titles")
-            .where(whereClause.sql).asResult().fetchField<Long>(whereClause.params)
-
-
-        return when (result) {
-            is DataResult.Failure -> {
-                GlobalDialogManager.show(ErrorDialogConfig(result.error))
-                false
-            }
-            is DataResult.Success -> {
-                if (result.value > 0L) {
-                    errorManager.addGlobalError(AsianMediaTr.Form.titlesAlreadyExist())
-                    false
-                } else {
-                    true
-                }
-            }
+        if (count > 0L) {
+            errorManager.addGlobalError(AsianMediaTr.Form.titlesAlreadyExist())
+            return false
         }
+        return true
     }
 
     override fun defineActionValidations(): Map<String, (FormResultData) -> Boolean> {
         return mapOf(
-            "save" to { formData -> validateTitlesAgainstDatabase(formData) }
+            "save" to { formData -> validateNewTitlesAgainstDatabase(formData) }
         )
     }
 }
