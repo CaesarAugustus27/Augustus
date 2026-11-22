@@ -1,7 +1,7 @@
 package org.octavius.modules.sandbox.form.ui
 
-import io.github.octaviusframework.form.component.FormHandler
-import io.github.octaviusframework.form.component.FormView
+import io.github.octaviusframework.form.FormHandler
+import io.github.octaviusframework.form.FormView
 import org.octavius.modules.sandbox.form.SandboxFormDataManager
 import org.octavius.modules.sandbox.form.SandboxFormSchemaBuilder
 import org.octavius.modules.sandbox.localization.SandboxTr

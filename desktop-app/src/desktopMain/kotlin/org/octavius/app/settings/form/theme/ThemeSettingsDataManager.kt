@@ -2,9 +2,9 @@ package org.octavius.app.settings.form.theme
 
 import org.octavius.app.settings.AppSettingsManager
 import org.octavius.app.settings.domain.AppThemeMode
-import io.github.octaviusframework.form.component.FormDataManager
-import io.github.octaviusframework.form.control.base.FormResultData
-import io.github.octaviusframework.form.control.base.getCurrentAs
+import io.github.octaviusframework.form.FormDataManager
+import io.github.octaviusframework.form.FormResultData
+import io.github.octaviusframework.form.getCurrentAs
 
 class ThemeSettingsDataManager(
     private val settingsManager: AppSettingsManager

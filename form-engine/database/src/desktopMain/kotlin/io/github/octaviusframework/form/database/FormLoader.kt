@@ -2,7 +2,7 @@ package io.github.octaviusframework.form.database
 
 import io.github.octaviusframework.client.OctaviusClient
 import io.github.octaviusframework.client.DataResult
-import io.github.octaviusframework.form.component.PathResolver
+import io.github.octaviusframework.form.PathResolver
 import io.github.octaviusframework.form.database.localization.FormDatabaseTr
 import io.github.octaviusframework.identifier.CaseConvention
 import io.github.octaviusframework.identifier.CaseConverter

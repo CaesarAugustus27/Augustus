@@ -1,9 +1,9 @@
 package org.octavius.modules.sandbox.form.nested
 
+import io.github.octaviusframework.form.FormResultData
+import io.github.octaviusframework.form.control.repeatable.RepeatableResultValue
 import io.github.octaviusframework.form.database.DatabaseFormDataManager
-import io.github.octaviusframework.form.control.base.FormResultData
-import io.github.octaviusframework.form.control.base.getCurrentAs
-import io.github.octaviusframework.form.control.type.repeatable.RepeatableResultValue
+import io.github.octaviusframework.form.getCurrentAs
 import org.octavius.modules.sandbox.localization.SandboxTr
 import org.octavius.ui.snackbar.SnackbarManager
 

@@ -3,8 +3,8 @@ package io.github.octaviusframework.form.database
 import io.github.octaviusframework.client.OctaviusClient
 import io.github.octaviusframework.client.transaction.TransactionPlan
 import io.github.octaviusframework.driver.exception.ConstraintViolationException
-import io.github.octaviusframework.form.component.FormDataManager
-import io.github.octaviusframework.form.control.base.FormResultData
+import io.github.octaviusframework.form.FormDataManager
+import io.github.octaviusframework.form.FormResultData
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 

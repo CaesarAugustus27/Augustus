@@ -2,12 +2,12 @@ package org.octavius.app.settings.form.theme
 
 import org.octavius.app.localization.AppTr
 import org.octavius.app.settings.domain.AppThemeMode
-import io.github.octaviusframework.form.component.FormSchemaBuilder
-import io.github.octaviusframework.form.control.base.Control
-import io.github.octaviusframework.form.control.base.ControlAction
-import io.github.octaviusframework.form.control.type.button.ButtonControl
-import io.github.octaviusframework.form.control.type.button.ButtonType
-import io.github.octaviusframework.form.control.type.selection.EnumControl
+import io.github.octaviusframework.form.FormSchemaBuilder
+import io.github.octaviusframework.form.control.Control
+import io.github.octaviusframework.form.control.ControlAction
+import io.github.octaviusframework.form.control.button.ButtonControl
+import io.github.octaviusframework.form.control.button.ButtonType
+import io.github.octaviusframework.form.control.selection.EnumControl
 
 class ThemeSettingsSchemaBuilder : FormSchemaBuilder() {
     override fun defineControls(): Map<String, Control<*>> = mapOf(

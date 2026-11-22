@@ -6,14 +6,14 @@ import io.github.octaviusframework.client.transaction.toTransactionValue
 import io.github.octaviusframework.driver.type.PgStandardType
 import io.github.octaviusframework.driver.type.withPgType
 import org.octavius.domain.game.GameStatus
-import io.github.octaviusframework.form.control.base.FormResultData
-import io.github.octaviusframework.form.control.base.getCurrent
-import io.github.octaviusframework.form.control.base.getCurrentAs
-import io.github.octaviusframework.form.control.base.getInitial
-import io.github.octaviusframework.form.control.base.getInitialAs
-import io.github.octaviusframework.form.control.type.repeatable.RepeatableResultValue
+import io.github.octaviusframework.form.FormResultData
+import io.github.octaviusframework.form.control.repeatable.RepeatableResultValue
 import io.github.octaviusframework.form.database.ConstraintError
 import io.github.octaviusframework.form.database.DatabaseFormDataManager
+import io.github.octaviusframework.form.getCurrent
+import io.github.octaviusframework.form.getCurrentAs
+import io.github.octaviusframework.form.getInitial
+import io.github.octaviusframework.form.getInitialAs
 import org.octavius.modules.games.localization.GamesTr
 
 class GameFormDataManager : DatabaseFormDataManager() {

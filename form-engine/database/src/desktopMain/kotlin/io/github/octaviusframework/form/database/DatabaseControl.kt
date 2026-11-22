@@ -10,11 +10,11 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.octavius.dialog.ErrorDialogConfig
 import org.octavius.dialog.GlobalDialogManager
-import io.github.octaviusframework.form.control.base.ControlAction
-import io.github.octaviusframework.form.control.base.ControlDependency
-import io.github.octaviusframework.form.control.type.selection.dropdown.AsyncPaginatedDropdownControl
-import io.github.octaviusframework.form.control.type.selection.dropdown.DropdownOption
-import io.github.octaviusframework.form.control.type.selection.dropdown.DropdownPage
+import io.github.octaviusframework.form.control.ControlAction
+import io.github.octaviusframework.form.control.ControlDependency
+import io.github.octaviusframework.form.control.selection.dropdown.AsyncPaginatedDropdownControl
+import io.github.octaviusframework.form.control.selection.dropdown.DropdownOption
+import io.github.octaviusframework.form.control.selection.dropdown.DropdownPage
 
 /**
  * A control for choosing a database record from a dropdown list.

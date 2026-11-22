@@ -1,8 +1,8 @@
 package org.octavius.app.settings.form.database
 
-import io.github.octaviusframework.form.component.FormDataManager
-import io.github.octaviusframework.form.control.base.FormResultData
-import io.github.octaviusframework.form.control.base.getCurrentAs
+import io.github.octaviusframework.form.FormDataManager
+import io.github.octaviusframework.form.FormResultData
+import io.github.octaviusframework.form.getCurrentAs
 import org.octavius.app.settings.AppSettingsManager
 import org.octavius.app.settings.domain.DatabaseSettings
 

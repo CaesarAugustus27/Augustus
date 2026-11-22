@@ -3,8 +3,8 @@ package org.octavius.feature.books.form.book.ui
 import org.octavius.feature.books.form.book.BookFormDataManager
 import org.octavius.feature.books.form.book.BookFormSchemaBuilder
 import org.octavius.feature.books.localization.BooksTr
-import io.github.octaviusframework.form.component.FormHandler
-import io.github.octaviusframework.form.component.FormView
+import io.github.octaviusframework.form.FormHandler
+import io.github.octaviusframework.form.FormView
 import org.octavius.navigation.ComponentScreen
 import org.octavius.navigation.Screen
 

@@ -1,11 +1,11 @@
 package org.octavius.feature.books.form.author
 
 import io.github.octaviusframework.client.transaction.TransactionPlan
-import io.github.octaviusframework.form.control.base.FormResultData
-import io.github.octaviusframework.form.control.base.getCurrent
-import io.github.octaviusframework.form.control.base.getInitial
+import io.github.octaviusframework.form.FormResultData
 import io.github.octaviusframework.form.database.ConstraintError
 import io.github.octaviusframework.form.database.DatabaseFormDataManager
+import io.github.octaviusframework.form.getCurrent
+import io.github.octaviusframework.form.getInitial
 import org.octavius.feature.books.localization.BooksTr
 
 class BookAuthorDataManager : DatabaseFormDataManager() {

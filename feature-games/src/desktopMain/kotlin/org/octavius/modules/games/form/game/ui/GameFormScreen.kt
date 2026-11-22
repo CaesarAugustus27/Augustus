@@ -1,7 +1,7 @@
 package org.octavius.modules.games.form.game.ui
 
-import io.github.octaviusframework.form.component.FormHandler
-import io.github.octaviusframework.form.component.FormView
+import io.github.octaviusframework.form.FormHandler
+import io.github.octaviusframework.form.FormView
 import org.octavius.modules.games.form.game.GameFormDataManager
 import org.octavius.modules.games.form.game.GameFormSchemaBuilder
 import org.octavius.modules.games.localization.GamesTr

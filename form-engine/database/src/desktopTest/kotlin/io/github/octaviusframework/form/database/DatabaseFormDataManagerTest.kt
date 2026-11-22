@@ -5,10 +5,10 @@ import io.github.octaviusframework.client.transaction.TransactionPlan
 import io.github.octaviusframework.driver.exception.ConstraintViolationException
 import io.github.octaviusframework.driver.exception.ConstraintViolationExceptionReason
 import io.github.octaviusframework.driver.message.ServerErrorMessage
-import io.github.octaviusframework.form.component.FormHandler
-import io.github.octaviusframework.form.component.FormSchemaBuilder
-import io.github.octaviusframework.form.control.base.FormResultData
-import io.github.octaviusframework.form.control.type.primitive.StringControl
+import io.github.octaviusframework.form.FormHandler
+import io.github.octaviusframework.form.FormResultData
+import io.github.octaviusframework.form.FormSchemaBuilder
+import io.github.octaviusframework.form.control.primitive.StringControl
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify

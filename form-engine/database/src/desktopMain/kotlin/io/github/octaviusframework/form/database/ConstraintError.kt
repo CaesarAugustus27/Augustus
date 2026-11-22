@@ -1,6 +1,6 @@
 package io.github.octaviusframework.form.database
 
-import io.github.octaviusframework.form.component.ErrorManager
+import io.github.octaviusframework.form.ErrorManager
 
 /** The error a form shows when a save violates a constraint from `DatabaseFormDataManager.constraintErrors`. */
 sealed class ConstraintError {

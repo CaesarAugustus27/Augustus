@@ -1,12 +1,12 @@
 package org.octavius.app.settings.form.database
 
 import org.octavius.app.localization.AppTr
-import io.github.octaviusframework.form.component.FormSchemaBuilder
-import io.github.octaviusframework.form.control.base.Control
-import io.github.octaviusframework.form.control.base.ControlAction
-import io.github.octaviusframework.form.control.type.button.ButtonControl
-import io.github.octaviusframework.form.control.type.button.ButtonType
-import io.github.octaviusframework.form.control.type.primitive.StringControl
+import io.github.octaviusframework.form.FormSchemaBuilder
+import io.github.octaviusframework.form.control.Control
+import io.github.octaviusframework.form.control.ControlAction
+import io.github.octaviusframework.form.control.button.ButtonControl
+import io.github.octaviusframework.form.control.button.ButtonType
+import io.github.octaviusframework.form.control.primitive.StringControl
 
 class DatabaseSettingsSchemaBuilder : FormSchemaBuilder() {
     override fun defineControls(): Map<String, Control<*>> = mapOf(

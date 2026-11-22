@@ -27,17 +27,17 @@ a settings form, needs only `core`.
 
 ## Control types
 
-| Category   | Package                   | Controls                                                                                           |
-|------------|---------------------------|----------------------------------------------------------------------------------------------------|
-| Primitive  | `control.type.primitive`  | `StringControl`, `MultilineStringControl`, `CheckboxControl`, `SwitchControl`, `FilePickerControl` |
-| Number     | `control.type.number`     | `IntegerControl`, `DoubleControl`, `BigDecimalControl`                                             |
-| Date, time | `control.type.datetime`   | `DateTimeControl`, `IntervalControl`                                                               |
-| Selection  | `control.type.selection`  | `EnumControl`, `RadioGroupControl`, `CheckboxGroupControl`                                         |
-| Collection | `control.type.collection` | `StringListControl`                                                                                |
-| Container  | `control.type.container`  | `SectionControl`                                                                                   |
-| Repeatable | `control.type.repeatable` | `RepeatableControl`                                                                                |
-| Button     | `control.type.button`     | `ButtonControl`                                                                                    |
-| Database   | `database`                | `DatabaseControl` (in the `database` module)                                                       |
+| Category   | Package              | Controls                                                                                           |
+|------------|----------------------|----------------------------------------------------------------------------------------------------|
+| Primitive  | `control.primitive`  | `StringControl`, `MultilineStringControl`, `CheckboxControl`, `SwitchControl`, `FilePickerControl` |
+| Number     | `control.number`     | `IntegerControl`, `DoubleControl`, `BigDecimalControl`                                             |
+| Date, time | `control.datetime`   | `DateTimeControl`, `IntervalControl`                                                               |
+| Selection  | `control.selection`  | `EnumControl`, `RadioGroupControl`, `CheckboxGroupControl`                                         |
+| Collection | `control.collection` | `StringListControl`                                                                                |
+| Container  | `control.container`  | `SectionControl`                                                                                   |
+| Repeatable | `control.repeatable` | `RepeatableControl`                                                                                |
+| Button     | `control.button`     | `ButtonControl`                                                                                    |
+| Database   | `database`           | `DatabaseControl` (in the `database` module)                                                       |
 
 `DateTimeControl<T>` works through a `DateTimeAdapter<T>`. The functions `DateControl`, `LocalDateTimeControl`,
 `LocalTimeControl` and `InstantControl` create it for the usual types.
@@ -454,23 +454,26 @@ The engine's strings are in `core/src/commonMain/resources/i18n/{en,pl}.json`, w
 ```
 form-engine/
 ├── core/
-│   ├── component/
-│   │   ├── FormSchema.kt          # FormSchema, FormSchemaBuilder
-│   │   ├── FormState.kt           # Per-control state keyed by path, FormLoadState
-│   │   ├── FormHandler.kt         # Loads data, validates, runs actions
-│   │   ├── FormActionTrigger.kt   # triggerAction
-│   │   ├── FormView.kt            # Composable with the content and the action bar
-│   │   ├── FormDataManager.kt     # initData, definedFormActions
-│   │   ├── FormValidator.kt       # Business-rule and action validation
-│   │   ├── ErrorManager.kt        # Global, field and format errors
-│   │   ├── PathResolver.kt        # Relative paths and wildcards
-│   │   ├── InitDataException.kt   # initData does not fit the schema
-│   │   └── FormResultException.kt # A value cannot be read from FormResultData
+│   ├── FormSchema.kt              # FormSchema, FormSchemaBuilder
+│   ├── FormState.kt               # Per-control state keyed by path, FormLoadState
+│   ├── FormHandler.kt             # Loads data, validates, runs actions
+│   ├── FormActionTrigger.kt       # triggerAction
+│   ├── FormView.kt                # Composable with the content and the action bar
+│   ├── FormDataManager.kt         # initData, definedFormActions
+│   ├── FormValidator.kt           # Business-rule and action validation
+│   ├── FormResultData.kt          # FormResultData, getCurrent, getInitial
+│   ├── ErrorManager.kt            # Global, field and format errors
+│   ├── PathResolver.kt            # Relative paths and wildcards
+│   ├── InitDataException.kt       # initData does not fit the schema
+│   ├── FormResultException.kt     # A value cannot be read from FormResultData
 │   │
 │   ├── control/
-│   │   ├── base/                  # Control, ControlAction, ControlData, Dependencies
-│   │   ├── type/                  # One package per control category, controls with their validation options
-│   │   └── layout/                # Rendering of sections, repeatable rows and labels
+│   │   ├── Control.kt             # Base class of controls
+│   │   ├── ControlAction.kt       # ControlAction, ActionContext
+│   │   ├── ControlData.kt         # ControlState, ControlContext
+│   │   ├── Dependencies.kt        # ControlDependency, DependencyType, ComparisonType
+│   │   ├── Renderers.kt           # Labels and field errors
+│   │   └── <category>/            # Controls of a category with their validation options and rendering
 │   │
 │   └── resources/i18n/            # en and pl translations
 │
