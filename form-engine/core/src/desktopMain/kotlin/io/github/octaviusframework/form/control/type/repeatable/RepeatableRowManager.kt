@@ -4,7 +4,6 @@ import io.github.octaviusframework.form.component.FormState
 import io.github.octaviusframework.form.control.base.Control
 import io.github.octaviusframework.form.control.base.ControlContext
 import io.github.octaviusframework.form.control.base.ControlState
-import io.github.octaviusframework.form.control.base.RepeatableValidation
 
 class RepeatableRowManager(
     private val rowControls: Map<String, Control<*>>,

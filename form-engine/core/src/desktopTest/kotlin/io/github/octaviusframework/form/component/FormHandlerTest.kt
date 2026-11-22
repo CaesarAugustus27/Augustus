@@ -15,8 +15,8 @@ import io.github.octaviusframework.form.control.base.ControlDependency
 import io.github.octaviusframework.form.control.base.ControlState
 import io.github.octaviusframework.form.control.base.DependencyType
 import io.github.octaviusframework.form.control.base.FormResultData
-import io.github.octaviusframework.form.control.base.IntegerValidation
-import io.github.octaviusframework.form.control.base.RepeatableValidation
+import io.github.octaviusframework.form.control.type.number.IntegerValidation
+import io.github.octaviusframework.form.control.type.repeatable.RepeatableValidation
 import io.github.octaviusframework.form.control.base.getCurrent
 import io.github.octaviusframework.form.control.base.getCurrentAs
 import io.github.octaviusframework.form.control.base.getInitial

@@ -7,23 +7,23 @@ import kotlinx.datetime.LocalTime
 import kotlinx.datetime.TimeZone
 import org.octavius.error.rememberSupervisedCoroutineScope
 import io.github.octaviusframework.form.control.base.*
-import io.github.octaviusframework.form.control.validator.datetime.DateTimeValidator
 import org.octavius.ui.datetime.DateTimePickerDialog
 import org.octavius.ui.datetime.PickerTextField
 import org.octavius.util.*
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 
-class DateTimeControl<T : Any>(
+class DateTimeControl<T : Comparable<T>>(
     private val adapter: DateTimeAdapter<T>,
     label: String?,
     required: Boolean? = false,
     dependencies: Map<String, ControlDependency<*>>? = null,
-    validationOptions: DateTimeValidation<T>? = null,
+    private val validationOptions: DateTimeValidation<T>? = null,
     actions: List<ControlAction<T>>? = null
-) : Control<T>(label, required, dependencies, validationOptions, actions) {
+) : Control<T>(label, required, dependencies, actions) {
 
-    override val validator: ControlValidator<T> = DateTimeValidator(validationOptions, adapter)
+    override fun validationErrors(controlContext: ControlContext, value: T) =
+        validationOptions?.errors(value, adapter::format).orEmpty()
 
     override fun acceptsValue(value: Any) = adapter.valueClass.isInstance(value)
 

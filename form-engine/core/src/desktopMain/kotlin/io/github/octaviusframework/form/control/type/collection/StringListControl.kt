@@ -12,7 +12,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.github.octaviusframework.form.control.base.*
-import io.github.octaviusframework.form.control.validator.collection.StringListValidator
 import io.github.octaviusframework.form.localization.FormTr
 import org.octavius.localization.Tr
 import org.octavius.theme.FormSpacing
@@ -27,11 +26,12 @@ class StringListControl(
     label: String?,
     required: Boolean? = false,
     dependencies: Map<String, ControlDependency<*>>? = null,
-    validationOptions: StringListValidation? = null
+    private val validationOptions: StringListValidation? = null
 ) : Control<List<String>>(
-    label, required, dependencies, validationOptions = validationOptions, hasStandardLayout = false
+    label, required, dependencies, hasStandardLayout = false
 ) {
-    override val validator: ControlValidator<List<String>> = StringListValidator(validationOptions)
+    override fun validationErrors(controlContext: ControlContext, value: List<String>) =
+        validationOptions?.errors(value).orEmpty()
 
     override fun acceptsValue(value: Any) = value is List<*> && value.all { it is String }
 
@@ -46,8 +46,8 @@ class StringListControl(
         val currentList = controlState.value.value ?: listOf()
         var newItemText by remember { mutableStateOf("") }
 
-        val minItems = (validationOptions as? StringListValidation)?.minItems ?: 0
-        val maxItems = (validationOptions as? StringListValidation)?.maxItems
+        val minItems = validationOptions?.minItems ?: 0
+        val maxItems = validationOptions?.maxItems
 
         // Ensure minimum items
         LaunchedEffect(currentList.size) {

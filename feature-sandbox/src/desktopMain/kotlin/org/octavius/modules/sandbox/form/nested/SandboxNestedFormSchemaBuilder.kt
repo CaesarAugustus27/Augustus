@@ -5,6 +5,7 @@ import io.github.octaviusframework.form.control.base.*
 import io.github.octaviusframework.form.control.type.button.ButtonControl
 import io.github.octaviusframework.form.control.type.button.ButtonType
 import io.github.octaviusframework.form.control.type.number.IntegerControl
+import io.github.octaviusframework.form.control.type.number.IntegerValidation
 import io.github.octaviusframework.form.control.type.primitive.CheckboxControl
 import io.github.octaviusframework.form.control.type.primitive.StringControl
 import io.github.octaviusframework.form.control.type.repeatable.RepeatableControl

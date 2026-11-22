@@ -7,7 +7,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import org.octavius.error.rememberSupervisedCoroutineScope
 import io.github.octaviusframework.form.control.base.*
-import io.github.octaviusframework.form.control.validator.primitive.StringValidator
 import org.octavius.theme.FormSpacing
 
 /**
@@ -20,16 +19,15 @@ class StringControl(
     label: String?,
     required: Boolean? = false,
     dependencies: Map<String, ControlDependency<*>>? = null,
-    validationOptions: StringValidation? = null,
+    private val validationOptions: StringValidation? = null,
     actions: List<ControlAction<String>>? = null
 ) : Control<String>(
     label,
     required,
     dependencies,
-    validationOptions = validationOptions,
     actions = actions
 ) {
-    override val validator: ControlValidator<String> = StringValidator(validationOptions)
+    override fun validationErrors(controlContext: ControlContext, value: String) = validationOptions?.errors(value).orEmpty()
 
     override fun acceptsValue(value: Any) = value is String
 

@@ -3,7 +3,6 @@ package io.github.octaviusframework.form.control.type.datetime
 import androidx.compose.runtime.*
 import org.octavius.error.rememberSupervisedCoroutineScope
 import io.github.octaviusframework.form.control.base.*
-import io.github.octaviusframework.form.control.validator.datetime.IntervalValidator
 import org.octavius.ui.datetime.IntervalPickerDialog
 import org.octavius.ui.datetime.PickerTextField
 import kotlin.time.Duration
@@ -12,12 +11,13 @@ class IntervalControl(
     label: String?,
     required: Boolean? = false,
     dependencies: Map<String, ControlDependency<*>>? = null,
-    validationOptions: IntervalValidation? = null,
+    private val validationOptions: IntervalValidation? = null,
     actions: List<ControlAction<Duration>>? = null
 ) : Control<Duration>(
-    label, required, dependencies, validationOptions, actions
+    label, required, dependencies, actions
 ) {
-    override val validator: ControlValidator<Duration> = IntervalValidator(validationOptions)
+    override fun validationErrors(controlContext: ControlContext, value: Duration) =
+        validationOptions?.errors(value, ::formatDuration).orEmpty()
 
     override fun acceptsValue(value: Any) = value is Duration
 

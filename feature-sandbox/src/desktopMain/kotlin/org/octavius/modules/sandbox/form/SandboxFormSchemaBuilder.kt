@@ -2,12 +2,14 @@ package org.octavius.modules.sandbox.form
 
 import io.github.octaviusframework.form.component.FormSchemaBuilder
 import io.github.octaviusframework.form.control.base.*
+import io.github.octaviusframework.form.control.layout.ControlOrientation
 import io.github.octaviusframework.form.control.type.button.ButtonControl
 import io.github.octaviusframework.form.control.type.button.ButtonType
 import io.github.octaviusframework.form.control.type.collection.StringListControl
 import io.github.octaviusframework.form.control.type.container.SectionControl
 import io.github.octaviusframework.form.control.type.datetime.DateControl
 import io.github.octaviusframework.form.control.type.number.IntegerControl
+import io.github.octaviusframework.form.control.type.number.IntegerValidation
 import io.github.octaviusframework.form.control.type.primitive.CheckboxControl
 import io.github.octaviusframework.form.control.type.primitive.FilePickerControl
 import io.github.octaviusframework.form.control.type.primitive.FilePickerMode
@@ -15,7 +17,7 @@ import io.github.octaviusframework.form.control.type.primitive.MultilineStringCo
 import io.github.octaviusframework.form.control.type.primitive.StringControl
 import io.github.octaviusframework.form.control.type.primitive.SwitchControl
 import io.github.octaviusframework.form.control.type.repeatable.RepeatableControl
-import io.github.octaviusframework.form.control.layout.ControlOrientation
+import io.github.octaviusframework.form.control.type.repeatable.RepeatableValidation
 import io.github.octaviusframework.form.control.type.selection.CheckboxGroupControl
 import io.github.octaviusframework.form.control.type.selection.EnumControl
 import io.github.octaviusframework.form.control.type.selection.RadioGroupControl

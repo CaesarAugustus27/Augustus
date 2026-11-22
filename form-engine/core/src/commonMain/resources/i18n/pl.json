@@ -36,12 +36,9 @@
     "fieldRequired": "To pole jest wymagane",
     "invalidFormat": "Nieprawidłowy format",
     "invalidNumberFormat": "Nieprawidłowy format liczby",
-    "itemMaxLength": "Element {item}: Maksymalna długość to {max} znaków",
-    "itemMinLength": "Element {item}: Minimalna długość to {min} znaków",
-    "itemPatternError": "Element {item}: {message}",
+    "itemError": "Element {item}: {message}",
     "maxDecimalPlaces": "Maksymalnie {places} miejsc po przecinku",
     "maxInterval": "Interwał musi być krótszy niż {max}",
-    "maxItems": "Maksymalnie {max} elementów",
     "maximumItems": {
       "$plural": "count",
       "one": "Maksymalnie {count} element",
@@ -52,7 +49,6 @@
     "maxLength": "Maksymalna długość to {max} znaków",
     "maxValue": "Wartość musi być mniejsza lub równa {max}",
     "minInterval": "Interwał musi być dłuższy niż {min}",
-    "minItems": "Wymagane minimum {min} elementów",
     "minimumItems": {
       "$plural": "count",
       "one": "Wymagany minimum {count} element",

@@ -17,7 +17,6 @@ import io.github.octaviusframework.form.control.base.*
 import io.github.octaviusframework.form.control.layout.repeatable.RepeatableHeader
 import io.github.octaviusframework.form.control.layout.repeatable.RepeatableRowCard
 import io.github.octaviusframework.form.control.layout.repeatable.RepeatableRowContent
-import io.github.octaviusframework.form.control.validator.repeatable.RepeatableValidator
 import org.octavius.theme.FormSpacing
 
 /**
@@ -33,13 +32,12 @@ class RepeatableControl(
     label: String?,
     required: Boolean? = false,
     dependencies: Map<String, ControlDependency<*>>? = null,
-    validationOptions: RepeatableValidation? = null
+    private val validationOptions: RepeatableValidation? = null
 ) : Control<List<RepeatableRow>>(
     label,
     required,
     dependencies,
-    hasStandardLayout = false,
-    validationOptions = validationOptions
+    hasStandardLayout = false
 ) {
     private lateinit var rowManager: RepeatableRowManager
 
@@ -50,7 +48,7 @@ class RepeatableControl(
         formActionTrigger: FormActionTrigger
     ) {
         super.initializeControlLifecycle(formState, formSchema, errorManager, formActionTrigger)
-        this.rowManager = RepeatableRowManager(rowControls, formState, validationOptions as RepeatableValidation?)
+        this.rowManager = RepeatableRowManager(rowControls, formState, validationOptions)
     }
 
     override fun registerChildrenInGlobalMap(controlContext: ControlContext): Map<String, Control<*>> {
@@ -70,7 +68,13 @@ class RepeatableControl(
         return rows.flatMap { row -> rowContexts(controlContext, row, rowControls) }
     }
 
-    override val validator: ControlValidator<List<RepeatableRow>> = RepeatableValidator(validationOptions)
+    // The rows' own fields are validated by the engine, which walks down to them through childContexts.
+    override fun validationErrors(controlContext: ControlContext, value: List<RepeatableRow>): List<String> {
+        val options = validationOptions ?: return emptyList()
+        return options.errors(value) { row, field ->
+            formState.getControlState(controlContext.forRepeatableChild(field, row.id).fullStatePath)?.value?.value
+        }
+    }
 
     override fun copyInitToValue(value: List<RepeatableRow>): List<RepeatableRow> {
         // With the global state there is no need to copy the states - they are already in FormState
@@ -93,7 +97,7 @@ class RepeatableControl(
 
         // 2. Add empty rows if minItems requires them
         val additionalModelRows = mutableListOf<RepeatableRow>()
-        val minRows = (validationOptions as? RepeatableValidation)?.minItems ?: 0
+        val minRows = validationOptions?.minItems ?: 0
         while (initialModelRows.size + additionalModelRows.size < minRows) {
             val index = initialModelRows.size + additionalModelRows.size
 

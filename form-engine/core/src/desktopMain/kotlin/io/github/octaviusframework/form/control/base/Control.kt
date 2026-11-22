@@ -11,9 +11,10 @@ import io.github.octaviusframework.form.component.FormActionTrigger
 import io.github.octaviusframework.form.component.FormSchema
 import io.github.octaviusframework.form.component.FormState
 import io.github.octaviusframework.form.component.InitDataException
+import io.github.octaviusframework.form.component.PathResolver
 import io.github.octaviusframework.form.control.layout.RenderFieldError
 import io.github.octaviusframework.form.control.layout.RenderNormalLabel
-import io.github.octaviusframework.form.control.validator.DefaultValidator
+import io.github.octaviusframework.form.localization.FormTr
 
 /**
  * Abstract base class of all form controls.
@@ -25,7 +26,6 @@ abstract class Control<T : Any> internal constructor(
     internal val label: String?,
     internal val required: Boolean?,
     internal val dependencies: Map<String, ControlDependency<*>>?,
-    internal val validationOptions: ValidationOptions? = null,
     private val actions: List<ControlAction<T>>? = null,
     protected val hasStandardLayout: Boolean = true
 ) {
@@ -72,7 +72,6 @@ abstract class Control<T : Any> internal constructor(
         this.formSchema = formSchema
         this.errorManager = errorManager
         this.formActionTrigger = formActionTrigger
-        validator.setupFormReferences(formState, formSchema, errorManager)
     }
 
     // --- 4. State and data ---
@@ -130,7 +129,7 @@ abstract class Control<T : Any> internal constructor(
     internal fun getResult(controlContext: ControlContext, state: ControlState<*>): ControlResultData {
         val result = convertToResult(controlContext, state)
         // Invisible controls do not pass their value to save.
-        return if (!validator.isControlVisible(this, controlContext)) {
+        return if (!isVisible(controlContext)) {
             result.copy(currentValue = null)
         } else {
             result
@@ -145,20 +144,78 @@ abstract class Control<T : Any> internal constructor(
         return ControlResultData(currentValue = state.value.value, initialValue = state.initValue.value)
     }
 
-    // --- 5. Validation ---
+    // --- 5. Visibility, requirement and validation ---
     /**
-     * Validator responsible for validating this control.
-     * Every control type provides its own implementation (e.g. `StringValidator`).
-     * Empty implementation by default
+     * Whether the control shows: its parent shows and every `Visible` dependency is met.
      */
-    protected open val validator: ControlValidator<T> = DefaultValidator()
+    internal fun isVisible(controlContext: ControlContext): Boolean {
+        controlContext.parent?.let { parentContext ->
+            if (!formSchema.getControl(parentContext.fullControlPath)!!.isVisible(parentContext)) return false
+        }
+        return dependenciesOf(DependencyType.Visible).all { isDependencyMet(it, controlContext) }
+    }
 
     /**
-     * Runs this control's validation with its validator.
+     * Whether the control must be filled in: `required = true` or any `Required` dependency is met.
+     */
+    internal fun isRequired(controlContext: ControlContext): Boolean {
+        if (required == true) return true
+        return dependenciesOf(DependencyType.Required).any { isDependencyMet(it, controlContext) }
+    }
+
+    private fun dependenciesOf(type: DependencyType): List<ControlDependency<*>> =
+        dependencies.orEmpty().values.filter { it.dependencyType == type }
+
+    private fun isDependencyMet(dependency: ControlDependency<*>, controlContext: ControlContext): Boolean {
+        val resolvedPath = PathResolver.resolvePath(dependency.controlPath, controlContext)
+        // A wrong path is a bug in the schema - a dependency silently met would hide it forever.
+        val dependentState = formState.getControlState(resolvedPath) ?: throw IllegalArgumentException(
+            "Dependency of control '${controlContext.fullStatePath}' points at '${dependency.controlPath}' " +
+                "(resolved to '$resolvedPath'), but the form has no such control"
+        )
+        val dependentValue = dependentState.value.value
+
+        return when (dependency.comparisonType) {
+            ComparisonType.OneOf -> {
+                val acceptedValues = dependency.value as? List<*> ?: listOf(dependency.value)
+                dependentValue in acceptedValues
+            }
+            ComparisonType.Equals -> dependentValue == dependency.value
+            ComparisonType.NotEquals -> dependentValue != dependency.value
+        }
+    }
+
+    /**
+     * Validates the control and records its field errors. A hidden control is skipped, a required one must not
+     * be empty (`null`, a blank string, an empty list), and any other non-null value goes through
+     * [validationErrors].
      */
     internal fun validateControl(controlContext: ControlContext, state: ControlState<*>) {
-        validator.validate(controlContext, state, this)
+        if (!isVisible(controlContext)) return
+
+        val value = state.value.value
+        if (isRequired(controlContext) && isEmpty(value)) {
+            errorManager.setFieldErrors(controlContext.fullStatePath, listOf(FormTr.Validation.fieldRequired()))
+            return
+        }
+
+        // acceptsValue keeps any value of the state a T.
+        @Suppress("UNCHECKED_CAST")
+        val typedValue = value as T? ?: return
+        errorManager.setFieldErrors(controlContext.fullStatePath, validationErrors(controlContext, typedValue))
     }
+
+    private fun isEmpty(value: Any?): Boolean = when (value) {
+        null -> true
+        is String -> value.isBlank()
+        is List<*> -> value.isEmpty()
+        else -> false
+    }
+
+    /**
+     * Messages for a non-null value that breaks the rules of this control type, e.g. its `validationOptions`.
+     */
+    protected open fun validationErrors(controlContext: ControlContext, value: T): List<String> = emptyList()
 
     // --- 6. Actions ---
     /**
@@ -215,8 +272,8 @@ abstract class Control<T : Any> internal constructor(
      */
     @Composable
     internal fun Render(controlContext: ControlContext, controlState: ControlState<*>) {
-        val isVisible = validator.isControlVisible(this, controlContext)
-        val isRequired = validator.isControlRequired(this, controlContext)
+        val isVisible = isVisible(controlContext)
+        val isRequired = isRequired(controlContext)
         val scope = rememberSupervisedCoroutineScope()
 
         @Suppress("UNCHECKED_CAST")

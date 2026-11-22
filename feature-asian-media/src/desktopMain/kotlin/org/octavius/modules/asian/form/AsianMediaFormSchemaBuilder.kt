@@ -11,10 +11,12 @@ import io.github.octaviusframework.form.control.base.*
 import io.github.octaviusframework.form.control.type.button.ButtonControl
 import io.github.octaviusframework.form.control.type.button.ButtonType
 import io.github.octaviusframework.form.control.type.collection.StringListControl
+import io.github.octaviusframework.form.control.type.collection.StringListValidation
 import io.github.octaviusframework.form.control.type.container.SectionControl
 import io.github.octaviusframework.form.control.type.number.IntegerControl
 import io.github.octaviusframework.form.control.type.primitive.CheckboxControl
 import io.github.octaviusframework.form.control.type.repeatable.RepeatableControl
+import io.github.octaviusframework.form.control.type.repeatable.RepeatableValidation
 import io.github.octaviusframework.form.control.type.selection.EnumControl
 import org.octavius.localization.Tr
 import org.octavius.modules.asian.localization.AsianMediaTr

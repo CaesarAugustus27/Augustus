@@ -34,12 +34,9 @@
     "fieldRequired": "This field is required",
     "invalidFormat": "Invalid format",
     "invalidNumberFormat": "Invalid number format",
-    "itemMaxLength": "Item {item}: Maximum length is {max} characters",
-    "itemMinLength": "Item {item}: Minimum length is {min} characters",
-    "itemPatternError": "Item {item}: {message}",
+    "itemError": "Item {item}: {message}",
     "maxDecimalPlaces": "Maximum {places} decimal places",
     "maxInterval": "Interval must be shorter than {max}",
-    "maxItems": "Maximum {max} items",
     "maximumItems": {
       "$plural": "count",
       "one": "Maximum {count} item",
@@ -48,7 +45,6 @@
     "maxLength": "Maximum length is {max} characters",
     "maxValue": "Value must be less than or equal to {max}",
     "minInterval": "Interval must be longer than {min}",
-    "minItems": "Minimum {min} items required",
     "minimumItems": {
       "$plural": "count",
       "one": "Minimum {count} item required",

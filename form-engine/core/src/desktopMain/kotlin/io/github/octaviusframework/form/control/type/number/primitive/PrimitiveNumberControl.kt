@@ -18,13 +18,11 @@ abstract class PrimitiveNumberControl<T : Number>(
     label: String?,
     required: Boolean?,
     dependencies: Map<String, ControlDependency<*>>?,
-    validationOptions: ValidationOptions?,
     actions: List<ControlAction<T>>?
 ) : Control<T>(
     label,
     required,
     dependencies,
-    validationOptions = validationOptions,
     actions = actions
 ) {
     /**

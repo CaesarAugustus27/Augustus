@@ -16,7 +16,6 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import org.octavius.error.rememberSupervisedCoroutineScope
 import io.github.octaviusframework.form.control.base.*
-import io.github.octaviusframework.form.control.validator.primitive.StringValidator
 import org.octavius.theme.FormSpacing
 import java.awt.Cursor
 
@@ -30,17 +29,16 @@ class MultilineStringControl(
     label: String?,
     required: Boolean? = false,
     dependencies: Map<String, ControlDependency<*>>? = null,
-    validationOptions: StringValidation? = null,
+    private val validationOptions: StringValidation? = null,
     actions: List<ControlAction<String>>? = null,
     private val minHeightDp: Int = 120
 ) : Control<String>(
     label,
     required,
     dependencies,
-    validationOptions = validationOptions,
     actions = actions
 ) {
-    override val validator: ControlValidator<String> = StringValidator(validationOptions)
+    override fun validationErrors(controlContext: ControlContext, value: String) = validationOptions?.errors(value).orEmpty()
 
     override fun acceptsValue(value: Any) = value is String
 

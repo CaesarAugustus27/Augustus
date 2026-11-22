@@ -30,7 +30,7 @@ open class FormValidator {
      *
      * Validation:
      * 1. Clears previous errors
-     * 2. Runs each control's validation through its validator
+     * 2. Runs each control's validation (required, its validationOptions)
      * 3. Checks required fields, format, dependencies
      *
      * @return true if all fields are valid

@@ -11,12 +11,15 @@ import io.github.octaviusframework.form.control.type.button.ButtonControl
 import io.github.octaviusframework.form.control.type.button.ButtonType
 import io.github.octaviusframework.form.control.type.container.SectionControl
 import io.github.octaviusframework.form.control.type.number.BigDecimalControl
+import io.github.octaviusframework.form.control.type.number.BigDecimalValidation
 import io.github.octaviusframework.form.control.type.number.IntegerControl
+import io.github.octaviusframework.form.control.type.number.IntegerValidation
 import io.github.octaviusframework.form.control.type.primitive.CheckboxControl
 import io.github.octaviusframework.form.control.type.primitive.StringControl
 import io.github.octaviusframework.form.control.type.repeatable.RepeatableControl
-import io.github.octaviusframework.form.database.DatabaseControl
+import io.github.octaviusframework.form.control.type.repeatable.RepeatableValidation
 import io.github.octaviusframework.form.control.type.selection.EnumControl
+import io.github.octaviusframework.form.database.DatabaseControl
 import org.octavius.localization.Tr
 import org.octavius.modules.games.localization.GamesTr
 import org.octavius.navigation.AppRouter

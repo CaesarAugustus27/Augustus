@@ -468,9 +468,8 @@ form-engine/
 │   │   └── FormResultException.kt # A value cannot be read from FormResultData
 │   │
 │   ├── control/
-│   │   ├── base/                  # Control, ControlAction, ControlData, Dependencies, ValidationOptions
-│   │   ├── type/                  # One package per control category
-│   │   ├── validator/             # ControlValidator implementations
+│   │   ├── base/                  # Control, ControlAction, ControlData, Dependencies
+│   │   ├── type/                  # One package per control category, controls with their validation options
 │   │   └── layout/                # Rendering of sections, repeatable rows and labels
 │   │
 │   └── resources/i18n/            # en and pl translations
